@@ -1,0 +1,33 @@
+name: Deploy to Windows Target via SSH
+
+on:
+  push:
+    branches:
+      - main
+      - run dispatch
+    workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script_stop: true
+          script: |
+            cd "${{ secrets.DEPLOY_PATH }}"
+            if exist .git (
+              git fetch origin main
+              git reset --hard origin/main
+            ) else (
+              git clone https://github.com/${{ github.repository }} .
+            )
+            echo "✅ Code updated successfully on Windows target"
