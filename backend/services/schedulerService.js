@@ -430,7 +430,7 @@ const executeWhatsAppReminders = async () => {
         }
         
         // Initialize WhatsApp client
-        console.log('🔄 Initializing WhatsApp client...');
+        console.log('🔄 ,...');
         initializeWhatsApp();
         
         // Wait for client to be ready (infinite wait with loading)
