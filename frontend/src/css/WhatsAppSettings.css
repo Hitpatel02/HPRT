@@ -1,0 +1,79 @@
+/* WhatsAppSettings.css */
+
+.wa-settings-container {
+    padding: 2rem 1.5rem;
+    max-width: 900px;
+}
+
+.wa-settings-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.wa-settings-subtitle {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.wa-socket-indicator {
+    font-size: 0.8rem;
+    margin-bottom: 1.25rem;
+    opacity: 0.75;
+}
+
+.wa-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.wa-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.wa-card--connected {
+    border-color: #198754;
+}
+
+.wa-card--help {
+    margin-top: 0;
+}
+
+.wa-card-header {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.wa-qr-card-body {
+    display: flex;
+    justify-content: center;
+}
+
+.wa-status-message {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: center;
+}
+
+.wa-info-table {
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.wa-info-table td:first-child {
+    color: #6c757d;
+    width: 90px;
+    font-weight: 500;
+}
+
+.wa-help-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
+}

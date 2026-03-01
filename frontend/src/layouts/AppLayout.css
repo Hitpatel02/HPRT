@@ -1,0 +1,24 @@
+/* AppLayout.css */
+
+.app-layout {
+    flex: 1;
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    overflow-x: hidden;
+}
+
+.app-layout__inner {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-6) var(--content-padding);
+}
+
+@media (max-width: 768px) {
+    .app-layout {
+        padding-top: var(--mobile-topbar-height);
+    }
+
+    .app-layout__inner {
+        padding: var(--space-4) var(--space-4);
+    }
+}

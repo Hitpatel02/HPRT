@@ -1,0 +1,136 @@
+/* Button.css — UI base component styles */
+
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-weight: var(--font-medium);
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast);
+    position: relative;
+    text-decoration: none;
+}
+
+.ui-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ── Sizes ───────────────────────────────────────────────────────────────── */
+.btn--xs {
+    padding: 0.25rem 0.6rem;
+    font-size: var(--text-xs);
+}
+
+.btn--sm {
+    padding: 0.38rem 0.8rem;
+    font-size: var(--text-sm);
+}
+
+.btn--md {
+    padding: 0.5rem 1.1rem;
+    font-size: var(--text-sm);
+}
+
+.btn--lg {
+    padding: 0.65rem 1.4rem;
+    font-size: var(--text-base);
+}
+
+/* ── Variants ────────────────────────────────────────────────────────────── */
+.btn--primary {
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
+}
+
+.btn--primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.btn--secondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
+}
+
+.btn--secondary:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+    border-color: var(--color-text-subtle);
+}
+
+.btn--danger {
+    background: var(--color-error);
+    color: #fff;
+}
+
+.btn--danger:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+.btn--success {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.btn--success:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+    background: var(--color-primary-light);
+}
+
+.btn--outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+}
+
+.btn--outline:hover:not(:disabled) {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+/* ── Inner elements ──────────────────────────────────────────────────────── */
+.btn-icon {
+    display: flex;
+    align-items: center;
+    font-size: 1.05em;
+}
+
+.btn-label {
+    display: inline-block;
+}
+
+/* ── Loading spinner ──────────────────────────────────────────────────────── */
+.btn-spinner {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: btn-spin 0.65s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

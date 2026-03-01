@@ -1,0 +1,12 @@
+Option 2: Use pgAdmin if it's installed
+If you have pgAdmin installed (it often comes with PostgreSQL on Windows), you can:
+Open pgAdmin
+Connect to your database
+Right-click on your database and select "Query Tool"
+Run the following SQL:
+
+-- First, find the schema
+SELECT table_schema FROM information_schema.tables WHERE table_name = 'clients' LIMIT 1;
+
+-- Then use that schema name (replace 'user' if different)
+SELECT setval('user.clients_id_seq', (SELECT MAX(id) FROM user.clients), true);
