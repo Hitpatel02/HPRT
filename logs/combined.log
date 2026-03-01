@@ -50,3 +50,39 @@
 2026-03-01 17:25:58 info: SIGINT received — shutting down gracefully
 2026-03-01 17:25:58 info: HTTP server closed
 2026-03-01 17:25:58 info: [whatsappClient] Shutting down...
+2026-03-01 20:24:05 info: [socket] WhatsApp socket handler registered
+2026-03-01 20:24:05 info: ✅ Server running on port 8080 [development]
+2026-03-01 20:24:05 info: ✅ reminder_jobs table verified
+2026-03-01 20:24:05 info: [pg-boss] Started successfully
+2026-03-01 20:24:05 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-01 20:24:05 info: ✅ Scheduler initialized
+2026-03-01 20:26:10 info: [socket] WhatsApp socket handler registered
+2026-03-01 20:26:10 info: ✅ Server running on port 8080 [development]
+2026-03-01 20:26:10 info: ✅ reminder_jobs table verified
+2026-03-01 20:26:11 info: [pg-boss] Started successfully
+2026-03-01 20:26:11 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-01 20:26:11 info: ✅ Scheduler initialized
+2026-03-01 20:32:33 info: [socket] WhatsApp socket handler registered
+2026-03-01 20:32:33 info: ✅ Server running on port 8080 [development]
+2026-03-01 20:32:33 info: ✅ reminder_jobs table verified
+2026-03-01 20:32:33 info: [pg-boss] Started successfully
+2026-03-01 20:32:33 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-01 20:32:33 info: ✅ Scheduler initialized
+2026-03-01 20:35:01 info: [socket] WhatsApp socket handler registered
+2026-03-01 20:35:01 info: ✅ Server running on port 8080 [development]
+2026-03-01 20:35:01 info: ✅ reminder_jobs table verified
+2026-03-01 20:35:01 info: [pg-boss] Started successfully
+2026-03-01 20:35:01 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-01 20:35:01 info: ✅ Scheduler initialized
+2026-03-01 20:35:17 info: [whatsappClient] Initializing client...
+2026-03-01 20:35:30 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-01 20:36:10 info: SIGINT received — shutting down gracefully
+2026-03-01 20:38:46 info: [socket] WhatsApp socket handler registered
+2026-03-01 20:38:46 info: ✅ Server running on port 8080 [development]
+2026-03-01 20:38:47 info: ✅ reminder_jobs table verified
+2026-03-01 20:38:47 info: [pg-boss] Started successfully
+2026-03-01 20:38:47 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-01 20:38:47 info: ✅ Scheduler initialized
+2026-03-01 20:40:59 info: SIGINT received — shutting down gracefully
+2026-03-01 20:40:59 info: HTTP server closed
+2026-03-01 20:40:59 info: [whatsappClient] Shutting down...

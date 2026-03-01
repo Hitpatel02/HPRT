@@ -59,6 +59,22 @@ const ClientList = () => {
     fetchClients();
   }, [token]);
 
+  // Fix: Bootstrap Modal leaves body overflow:hidden when navigating away via SPA routing.
+  // Clean it up whenever this component mounts (i.e. when user navigates back) and on unmount.
+  useEffect(() => {
+    const restoreBodyScroll = () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      document.body.classList.remove('modal-open');
+      // Remove any lingering modal-backdrop divs
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    };
+    // Run on mount (returning from client documents page)
+    restoreBodyScroll();
+    // Run on unmount (leaving this page)
+    return restoreBodyScroll;
+  }, []);
+
   const fetchClients = async () => {
     try {
       setLoading(true);

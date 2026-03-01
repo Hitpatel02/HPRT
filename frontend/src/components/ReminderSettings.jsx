@@ -557,7 +557,13 @@ const ReminderSettings = () => {
           ) : (
             <>
               {successMessage && <Alert variant="success">{successMessage}</Alert>}
-              <WhatsAppControl />
+
+              <Card className="mb-4">
+                <Card.Header as="h5">WhatsApp Connection</Card.Header>
+                <Card.Body>
+                  <WhatsAppControl />
+                </Card.Body>
+              </Card>
               
               {settings && Object.keys(settings).length > 0 && (
                 <ReminderToggles 
@@ -576,7 +582,7 @@ const ReminderSettings = () => {
                     <li><strong>TDS Due Date</strong>: Set the official due date for TDS filing.</li>
                     <li><strong>Reminder Dates</strong>: Set reminder dates for each document type.</li>
                   </ol>
-                  <p>Reminders will be sent automatically according to the document types enabled for each client and the dates you set here.</p>
+                  <p className="mb-0">Reminders will be sent automatically according to the document types enabled for each client and the dates you set here.</p>
                 </Card.Body>
               </Card>
               

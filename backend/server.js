@@ -58,7 +58,6 @@ const loginLimiter = rateLimit({
   max: 10,                   // max 10 login attempts per window
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip,
   message: { success: false, message: 'Too many login attempts. Please try again in 15 minutes.' },
 });
 
