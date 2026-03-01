@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Service Agreement</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman:ital,wght@0,400;0,700;1,400&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: A4;
+      margin: 20mm 20mm 25mm 20mm;
+      @bottom-center {
+        content: counter(page) " of " counter(pages);
+        font-size: 9pt;
+        color: #555;
+      }
+    }
+
+    html, body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #fff;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      border-bottom: 3px double #1a1a1a;
+      padding-bottom: 10px;
+      margin-bottom: 18px;
+    }
+
+    .header .company-name {
+      font-size: 18pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .header .company-sub {
+      font-size: 9.5pt;
+      color: #444;
+      margin-top: 2px;
+    }
+
+    .header .agreement-title {
+      font-size: 14pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 10px;
+      border-top: 1px solid #333;
+      padding-top: 8px;
+    }
+
+    /* ── METADATA TABLE ── */
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      font-size: 10.5pt;
+    }
+
+    .meta-table td {
+      padding: 4px 8px;
+      border: 1px solid #aaa;
+    }
+
+    .meta-table td.label {
+      font-weight: 700;
+      width: 38%;
+      background-color: #f4f4f4;
+    }
+
+    /* ── PARTIES ── */
+    .parties-section {
+      margin-bottom: 16px;
+    }
+
+    .parties-section p {
+      text-align: justify;
+      margin-bottom: 8px;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+
+    .section-title {
+      font-size: 11pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 2px;
+      margin-bottom: 6px;
+    }
+
+    .section p {
+      text-align: justify;
+      margin-bottom: 6px;
+    }
+
+    .section ol, .section ul {
+      padding-left: 22px;
+      margin-top: 4px;
+    }
+
+    .section ol li, .section ul li {
+      margin-bottom: 4px;
+      text-align: justify;
+    }
+
+    /* ── HIGHLIGHT VALUES ── */
+    .highlight {
+      font-weight: 700;
+    }
+
+    /* ── SIGNATURE BLOCK ── */
+    .signature-section {
+      margin-top: 28px;
+      page-break-inside: avoid;
+    }
+
+    .signature-title {
+      font-size: 11pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid #333;
+      padding-bottom: 2px;
+      margin-bottom: 16px;
+    }
+
+    .sig-grid {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .sig-block {
+      flex: 1;
+      border: 1px solid #ccc;
+      padding: 14px 16px;
+      border-radius: 4px;
+      background-color: #fafafa;
+    }
+
+    .sig-block .sig-party {
+      font-weight: 700;
+      font-size: 10.5pt;
+      margin-bottom: 40px; /* space for actual signature */
+    }
+
+    .sig-line {
+      border-top: 1px solid #333;
+      margin-top: 4px;
+      padding-top: 4px;
+      font-size: 9.5pt;
+      color: #333;
+    }
+
+    .sig-details {
+      margin-top: 8px;
+      font-size: 9pt;
+      color: #555;
+    }
+
+    /* ── FOOTER NOTICE ── */
+    .doc-footer {
+      margin-top: 20px;
+      border-top: 1px solid #ccc;
+      padding-top: 6px;
+      font-size: 8.5pt;
+      color: #666;
+      text-align: center;
+    }
+
+    /* ── PAGE NUMBER (CSS counter) ── */
+    .page-counter {
+      position: fixed;
+      bottom: 8mm;
+      right: 10mm;
+      font-size: 8.5pt;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="company-name">HPRT Associates</div>
+    <div class="company-sub">Chartered Accountants &amp; Tax Consultants | M. No. 966 468 7247</div>
+    <div class="agreement-title">Professional Services Agreement</div>
+  </div>
+
+  <!-- AGREEMENT METADATA -->
+  <table class="meta-table">
+    <tr>
+      <td class="label">Agreement Date</td>
+      <td class="highlight">{{agreement_date}}</td>
+      <td class="label">Client PAN</td>
+      <td class="highlight">{{pan_number}}</td>
+    </tr>
+    <tr>
+      <td class="label">Client Name</td>
+      <td colspan="3" class="highlight">{{client_name}}</td>
+    </tr>
+    <tr>
+      <td class="label">Client Address</td>
+      <td colspan="3">{{address}}</td>
+    </tr>
+  </table>
+
+  <!-- PARTIES -->
+  <div class="parties-section">
+    <p>
+      This Professional Services Agreement ("<strong>Agreement</strong>") is entered into as of
+      <span class="highlight">{{agreement_date}}</span>, by and between:
+    </p>
+    <p>
+      <strong>Service Provider:</strong> <span class="highlight">{{party_name}}</span> (hereinafter referred to as
+      "<strong>HPRT</strong>"), a firm of Chartered Accountants registered under the applicable laws of India; and
+    </p>
+    <p>
+      <strong>Client:</strong> <span class="highlight">{{client_name}}</span>, PAN: <span class="highlight">{{pan_number}}</span>,
+      having its registered address at <span class="highlight">{{address}}</span>
+      (hereinafter referred to as "<strong>Client</strong>").
+    </p>
+    <p>
+      Together referred to as the "<strong>Parties</strong>" and individually as a "<strong>Party</strong>".
+    </p>
+  </div>
+
+  <!-- 1. SCOPE OF SERVICES -->
+  <div class="section">
+    <div class="section-title">1. Scope of Services</div>
+    <p>
+      HPRT agrees to provide the following professional services to the Client:
+    </p>
+    <ol>
+      <li>Preparation and filing of Goods and Services Tax (GST) returns, including GSTR-1, GSTR-3B, and annual returns as applicable.</li>
+      <li>Preparation and filing of Tax Deducted at Source (TDS) returns in prescribed formats.</li>
+      <li>Income Tax return filing, tax planning advisory, and compliance services.</li>
+      <li>Review and reconciliation of books of accounts and bank statements on a periodic basis.</li>
+      <li>Advisory services on taxation matters, regulatory compliance, and statutory obligations as requested.</li>
+      <li>Liaison with tax authorities on behalf of the Client for routine assessments and correspondence.</li>
+    </ol>
+    <p>
+      Any services outside the above scope shall be agreed upon separately in writing by both Parties and may attract additional fees.
+    </p>
+  </div>
+
+  <!-- 2. FEES & PAYMENT -->
+  <div class="section">
+    <div class="section-title">2. Professional Fees &amp; Payment Terms</div>
+    <p>
+      The Client agrees to pay HPRT a professional fee equivalent to <span class="highlight">{{percentage}}%</span>
+      of the applicable tax liability or as mutually agreed in writing, whichever is higher, subject to the following terms:
+    </p>
+    <ol>
+      <li>Invoices shall be raised on a monthly basis and are payable within <strong>fifteen (15) days</strong> of the invoice date.</li>
+      <li>All fees are exclusive of applicable Goods and Services Tax (GST), which shall be charged additionally at the prevailing rate.</li>
+      <li>Late payments shall attract interest at <strong>1.5% per month</strong> (18% per annum) on the outstanding amount.</li>
+      <li>HPRT reserves the right to suspend services without liability in the event of non-payment beyond 30 days.</li>
+      <li>Out-of-pocket expenses, including government fees, filing charges, and travel (if any), shall be reimbursed by the Client at actual cost.</li>
+    </ol>
+  </div>
+
+  <!-- 3. CLIENT OBLIGATIONS -->
+  <div class="section">
+    <div class="section-title">3. Client Obligations</div>
+    <p>The Client agrees and undertakes to:</p>
+    <ol>
+      <li>Provide accurate, complete, and timely financial data, books of accounts, bank statements, and all relevant documents required by HPRT to perform the services.</li>
+      <li>Notify HPRT promptly of any material change in business operations, ownership structure, or tax registration details.</li>
+      <li>Designate a responsible person for coordination and communication with HPRT.</li>
+      <li>Not hold HPRT liable for any penalties, interest, or losses arising from delayed or incorrect information provided by the Client.</li>
+      <li>Maintain proper books of accounts as required under applicable laws.</li>
+    </ol>
+  </div>
+
+  <!-- 4. CONFIDENTIALITY -->
+  <div class="section">
+    <div class="section-title">4. Confidentiality</div>
+    <p>
+      Both Parties agree to keep all confidential information exchanged in connection with this Agreement strictly confidential.
+      Neither Party shall disclose, reproduce, or use such information for any purpose other than the performance of obligations
+      under this Agreement, without the prior written consent of the other Party.
+    </p>
+    <p>
+      This obligation of confidentiality shall survive the termination of this Agreement for a period of <strong>three (3) years</strong>.
+      Disclosure required by law, regulation, or court order shall not constitute a breach, provided the disclosing Party gives
+      prompt prior written notice to the other Party (to the extent legally permissible).
+    </p>
+  </div>
+
+  <!-- 5. TERM & TERMINATION -->
+  <div class="section">
+    <div class="section-title">5. Term &amp; Termination</div>
+    <p>
+      This Agreement shall commence on <span class="highlight">{{agreement_date}}</span> and shall remain in force for a period of
+      <strong>one (1) year</strong>, unless terminated earlier in accordance with this clause.
+    </p>
+    <ol>
+      <li><strong>Termination by Mutual Consent:</strong> Either Party may terminate this Agreement upon <strong>thirty (30) days</strong> prior written notice.</li>
+      <li><strong>Termination for Cause:</strong> Either Party may terminate immediately upon written notice if the other Party: (a) materially breaches this Agreement and fails to cure within 15 days of notice; (b) becomes insolvent or files for bankruptcy; or (c) engages in fraudulent or illegal conduct.</li>
+      <li>Upon termination, the Client shall pay all fees for services rendered up to the date of termination. HPRT shall return all original documents provided by the Client.</li>
+    </ol>
+  </div>
+
+  <!-- 6. LIMITATION OF LIABILITY -->
+  <div class="section">
+    <div class="section-title">6. Limitation of Liability</div>
+    <p>
+      To the maximum extent permitted by applicable law, HPRT's aggregate liability to the Client for any claims arising out of
+      or relating to this Agreement shall not exceed the total fees paid by the Client in the <strong>three (3) months</strong>
+      immediately preceding the event giving rise to the claim.
+    </p>
+    <p>
+      HPRT shall not be liable for any indirect, consequential, incidental, special, or punitive damages, including loss of
+      profits, business, or goodwill, even if advised of the possibility of such damages.
+    </p>
+  </div>
+
+  <!-- 7. GOVERNING LAW & DISPUTE RESOLUTION -->
+  <div class="section">
+    <div class="section-title">7. Governing Law &amp; Dispute Resolution</div>
+    <p>
+      This Agreement shall be governed by and construed in accordance with the laws of <strong>India</strong>.
+      Any dispute, controversy, or claim arising out of or relating to this Agreement shall first be attempted to be
+      resolved amicably through mutual negotiation within <strong>30 days</strong> of written notice of dispute.
+    </p>
+    <p>
+      If not resolved amicably, the dispute shall be referred to binding arbitration in accordance with the
+      <strong>Arbitration and Conciliation Act, 1996</strong>. The seat of arbitration shall be <strong>Mumbai, Maharashtra</strong>,
+      and proceedings shall be conducted in the English language. The decision of the arbitrator shall be final and binding on both Parties.
+    </p>
+  </div>
+
+  <!-- 8. GENERAL PROVISIONS -->
+  <div class="section">
+    <div class="section-title">8. General Provisions</div>
+    <ol>
+      <li><strong>Entire Agreement:</strong> This Agreement constitutes the entire agreement between the Parties with respect to its subject matter and supersedes all prior discussions, understandings, and agreements.</li>
+      <li><strong>Amendments:</strong> Any amendment to this Agreement must be in writing and signed by both Parties.</li>
+      <li><strong>Severability:</strong> If any provision of this Agreement is found invalid or unenforceable, the remaining provisions shall continue in full force and effect.</li>
+      <li><strong>Waiver:</strong> Failure to enforce any provision of this Agreement shall not constitute a waiver of the right to enforce it in the future.</li>
+      <li><strong>No Assignment:</strong> Neither Party may assign or transfer any rights or obligations under this Agreement without the prior written consent of the other Party.</li>
+      <li><strong>Force Majeure:</strong> Neither Party shall be liable for delays or failures in performance resulting from circumstances beyond their reasonable control, including natural disasters, government actions, or acts of God.</li>
+    </ol>
+  </div>
+
+  <!-- SIGNATURE BLOCK -->
+  <div class="signature-section">
+    <div class="signature-title">Signatures &amp; Acceptance</div>
+    <p style="margin-bottom: 14px; font-size: 10pt; text-align: justify;">
+      In witness whereof, the Parties have executed this Professional Services Agreement as of the date first written above.
+      By signing below, each Party acknowledges that they have read, understood, and agree to be bound by all terms and conditions
+      of this Agreement.
+    </p>
+
+    <div class="sig-grid">
+      <div class="sig-block">
+        <div class="sig-party">For &amp; on behalf of HPRT Associates<br/>(Service Provider)</div>
+        <div class="sig-line">Authorised Signatory</div>
+        <div class="sig-details">
+          Name: <span class="highlight">{{party_name}}</span><br/>
+          Date: {{agreement_date}}<br/>
+          Seal / Stamp:
+        </div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-party">For &amp; on behalf of<br/><span class="highlight">{{client_name}}</span><br/>(Client)</div>
+        <div class="sig-line">Authorised Signatory</div>
+        <div class="sig-details">
+          Name: ___________________________<br/>
+          PAN: <span class="highlight">{{pan_number}}</span><br/>
+          Date: {{agreement_date}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    This document is computer-generated and is legally valid only when signed by both Parties.
+    HPRT Associates | Professional Services Agreement | Confidential
+  </div>
+
+</body>
+</html>

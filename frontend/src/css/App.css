@@ -1,0 +1,234 @@
+/**
+ * App.css — Application-level layout + Bootstrap overrides
+ *
+ * No component-specific rules here. Only layout primitives and
+ * Bootstrap variable overrides that need to apply globally.
+ */
+
+/* ── Core Layout ─────────────────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  transition: margin-left var(--transition-base);
+}
+
+/* Legacy / fallback class kept for any remaining references */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+
+.content-container {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--content-padding-top) var(--content-padding) var(--content-padding);
+}
+
+/* ── Bootstrap Overrides ─────────────────────────────────────────────────── */
+
+/* Cards */
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface);
+}
+
+.card-header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  padding: var(--space-4) var(--space-5);
+}
+
+.card-body {
+  padding: var(--space-5);
+}
+
+/* Tables */
+.table {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.table thead th {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: var(--space-3) var(--space-4);
+  vertical-align: middle;
+  border-color: var(--color-border);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8fafc;
+}
+
+/* Forms */
+.form-control,
+.form-select {
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(44, 74, 158, 0.15);
+  background-color: var(--color-surface);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+/* Badges */
+.badge {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-full);
+  padding: 0.28em 0.65em;
+}
+
+/* Buttons — Bootstrap primary override */
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.btn-outline-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ── Navigation Active Link ──────────────────────────────────────────────── */
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-medium);
+}
+
+/* ── Alerts ──────────────────────────────────────────────────────────────── */
+.alert {
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  border: none;
+}
+
+.alert-danger {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.alert-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.alert-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.alert-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+/* ── Utility: Loading ────────────────────────────────────────────────────── */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: var(--color-text-muted);
+  gap: var(--space-4);
+}
+
+/* ── Utility: Table responsive ───────────────────────────────────────────── */
+.table-responsive {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* ── Date input ──────────────────────────────────────────────────────────── */
+input[type="date"] {
+  color: var(--color-text);
+}
+
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: var(--color-text);
+}
+
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+.modal-content {
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-5) var(--space-6);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-6);
+}
+
+/* ── Spinner global ───────────────────────────────────────────────────────── */
+.spinner-border-primary {
+  color: var(--color-primary);
+}

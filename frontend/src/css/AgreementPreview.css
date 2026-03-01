@@ -1,0 +1,38 @@
+/* AgreementPreview.css */
+
+.agp-wrapper {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+}
+
+.agp-iframe {
+    width: 100%;
+    height: 720px;
+    border: none;
+    display: block;
+    background: #f0f0f0;
+}
+
+.agp-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1rem;
+    color: #adb5bd;
+    text-align: center;
+    padding: 2rem;
+}
+
+.agp-placeholder-icon {
+    font-size: 3rem;
+    opacity: 0.4;
+}
+
+.agp-placeholder-text {
+    font-size: 0.9rem;
+    max-width: 260px;
+    line-height: 1.6;
+}

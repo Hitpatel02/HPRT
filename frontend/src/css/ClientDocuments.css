@@ -1,0 +1,86 @@
+.client-details-table {
+  margin-bottom: 0;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.client-details-table th {
+  font-weight: 600;
+  vertical-align: middle;
+  width: 20%;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem;
+}
+
+.client-details-table td {
+  vertical-align: middle;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+/* Add some styles for when there are multiple columns */
+.client-details-table td[colspan="3"] {
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.client-details-table ul {
+  margin-bottom: 0;
+  padding-left: 1rem;
+}
+
+/* Document types table styling */
+.document-types-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.document-types-table td {
+  border: 1px solid #dee2e6;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  background-color: #fff;
+}
+
+/* Inner tables styling */
+.inner-table {
+  margin: 0;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.inner-table td {
+  border: none;
+  border-right: 1px solid #dee2e6;
+  padding: 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.inner-table td:last-child {
+  border-right: none;
+}
+
+/* Force equal width columns */
+.inner-table tr {
+  display: flex;
+}
+
+.inner-table td {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Remove bottom border from the last row */
+.client-details-table tr:last-child td,
+.client-details-table tr:last-child th {
+  border-bottom: 1px solid #dee2e6;
+} 

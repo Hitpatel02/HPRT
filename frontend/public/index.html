@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HPRT - GST Document Tracking</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Specific icon styles -->
+    <style>
+      /* Override default date input display */
+      input[type="date"] {
+        position: relative;
+      }
+      
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      
+      /* Force browser to use DD/MM/YYYY format */
+      input[type="date"]:lang(en-GB) {
+        order: 2;
+      }
+      
+      /* Fix for Bootstrap Icons */
+      .bi {
+        display: inline-block !important;
+        font-size: 1rem !important;
+        line-height: 1 !important;
+        vertical-align: -0.125em !important;
+      }
+      
+      /* Additional fix for button icons */
+      button i {
+        display: inline-block !important;
+        vertical-align: middle !important;
+      }
+    </style>
+
+    <script>
+      // Set date inputs to use DD/MM/YYYY format
+      document.addEventListener('DOMContentLoaded', function() {
+        // Force locale to use DD/MM/YYYY format for date inputs
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+          input.setAttribute('data-date', '');
+          input.addEventListener('change', function() {
+            this.setAttribute('data-date', this.value);
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html> 

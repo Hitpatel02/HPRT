@@ -1,0 +1,107 @@
+/* AgreementForm.css */
+
+.agf-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.agf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.agf-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.agf-required {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.agf-input {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    background: #fff;
+    color: #212529;
+}
+
+.agf-input:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.agf-input--error {
+    border-color: #dc3545;
+}
+
+.agf-input--error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+.agf-textarea {
+    resize: vertical;
+    min-height: 70px;
+}
+
+.agf-error {
+    font-size: 0.78rem;
+    color: #dc3545;
+}
+
+/* ── Generate Button ── */
+.agf-submit-btn {
+    margin-top: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.agf-submit-btn:hover:not(:disabled) {
+    background: #0b5ed7;
+}
+
+.agf-submit-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.agf-submit-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.agf-btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: agf-spin 0.7s linear infinite;
+}
+
+@keyframes agf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
