@@ -66,7 +66,6 @@ function createClient() {
                 '--disable-features=site-per-process',
                 '--ignore-certificate-errors',
             ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
             timeout: 60000,
         },
         restartOnAuthFail: false,

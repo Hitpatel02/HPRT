@@ -1,3 +1,4 @@
+const clientQueries = require('../queries/clientQueries');
 const { logger } = require('../utils/logger');
 const documentQueries = require('../queries/documentQueries');
 const { getFormattedMonth } = require('../utils/dateUtils');
@@ -12,7 +13,7 @@ const { getFormattedMonth } = require('../utils/dateUtils');
 async function createDocumentForClient(clientId, documentMonth = null) {
   try {
     // Check if client exists and get document type preferences
-    const client = await documentQueries.getClientById(clientId);
+    const client = await clientQueries.getClientById(clientId);
 
     if (!client) {
       throw new Error(`Client with ID ${clientId} not found`);
@@ -55,7 +56,7 @@ async function createDocumentsForAllClients(documentMonth = null) {
     const month = documentMonth || getFormattedMonth();
 
     // Get all active clients
-    const clients = await documentQueries.getAllClients();
+    const clients = await documentQueries.getAllClientsForDocuments();
 
     // Check which clients already have documents for this month
     const existingClientIds = await documentQueries.getClientsWithDocuments(month);

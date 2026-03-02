@@ -4,13 +4,6 @@
  * SEPARATE PROCESS — start this independently of the API server:
  *   node workers/reminderWorker.js
  * or via PM2 (see ecosystem.config.js)
- *
- * Responsibilities:
- *   - Connect to pg-boss
- *   - Listen for 'send-reminder' jobs
- *   - Fetch settings, check idempotency, send email + WhatsApp
- *   - Update reminder_jobs status after each attempt
- *   - Mark final failure when retries are exhausted
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { getBoss, stopBoss } = require('../jobs/boss');
@@ -23,23 +16,46 @@ const { sendWhatsAppReminders } = require('../services/whatsappService');
 const whatsappClient = require('../config/whatsappClient');
 const { generateMonthlyReport } = require('../services/reportService');
 
+// Max retries — keep in sync with whatever you set in reminderScheduler when sending the job
+const MAX_RETRIES = 3;
+
+// ════════════════════════════════════════
+// Handle final failures (exhausted retries)
+// ════════════════════════════════════════
+
+async function handleFailedJob(job, lastError) {
+    const { settingsId, reminderType } = job.data || {};
+    logger.error(`[worker] Job ${job.id} failed permanently after all retries | type=${reminderType} | settingsId=${settingsId}`);
+
+    if (settingsId && reminderType) {
+        try {
+            const jobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
+            const trackingRow = jobs.find(j => j.reminder_type === reminderType && j.status !== 'cancelled');
+            if (trackingRow) {
+                await reminderJobQueries.updateJobStatus(trackingRow.id, {
+                    status: 'failed',
+                    last_error: `Exhausted all retries. Last error: ${lastError || 'Unknown'}`,
+                    processed_at: new Date(),
+                });
+            }
+        } catch (err) {
+            logger.error('[worker] Failed to update tracking row for exhausted job:', err);
+        }
+    }
+}
+
 // ════════════════════════════════════════
 // Worker handler
 // ════════════════════════════════════════
 
-/**
- * Process a single 'send-reminder' job.
- *
- * @param {Object} job - pg-boss job object
- * @param {Object} job.data - Payload sent by reminderScheduler
- */
 async function handleReminderJob(job) {
     const { settingsId, reminderType, immediate, scheduledFor } = job.data;
+    const retryCount = job.retrycount ?? 0;
+    const isFinalAttempt = retryCount >= MAX_RETRIES - 1;
 
-    logger.info(`[worker] Processing job ${job.id} | type=${reminderType} | settingsId=${settingsId} | immediate=${!!immediate}`);
+    logger.info(`[worker] Processing job ${job.id} | type=${reminderType} | settingsId=${settingsId} | immediate=${!!immediate} | attempt=${retryCount + 1}/${MAX_RETRIES}`);
 
-    // ── Fetch our tracking row ──────────────────────────
-    // For immediate/manual triggers there is no tracking row; skip idempotency check
+    // ── Fetch tracking row ─────────────────────────────
     let trackingRow = null;
     if (!immediate && settingsId && reminderType) {
         const jobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
@@ -49,7 +65,7 @@ async function handleReminderJob(job) {
     // ── Idempotency guard ──────────────────────────────
     if (trackingRow && trackingRow.status === 'sent') {
         logger.info(`[worker] Job ${job.id} already marked as 'sent'. Skipping.`);
-        return; // Tell pg-boss: success (no retry needed)
+        return;
     }
 
     // ── Mark as processing ─────────────────────────────
@@ -66,24 +82,25 @@ async function handleReminderJob(job) {
         : await settingsQueries.getLatestReminderSettings();
 
     if (!settings) {
-        const msg = `[worker] No settings found for settingsId=${settingsId}`;
-        logger.error(msg);
+        const msg = `No settings found for settingsId=${settingsId}`;
+        logger.error(`[worker] ${msg}`);
+
         if (trackingRow) {
+            // If final attempt, mark permanently failed; otherwise back to pending for retry
             await reminderJobQueries.updateJobStatus(trackingRow.id, {
-                status: 'failed',
+                status: isFinalAttempt ? 'failed' : 'pending',
                 last_error: msg,
-                processed_at: new Date(),
+                processed_at: isFinalAttempt ? new Date() : null,
             });
         }
-        // Throw so pg-boss will retry
-        throw new Error(msg);
+
+        throw new Error(msg); // Always throw — pg-boss handles retry/failure based on retrycount
     }
 
-    // ── Determine what to send ─────────────────────────
-    // reminderType: 'gst_1' | 'gst_2' | 'tds_1' | 'tds_2' | 'email' | 'whatsapp' | 'report'
+    // ── Send reminders ─────────────────────────────────
     let emailSent = false;
     let whatsappSent = false;
-    let errors = [];
+    const errors = [];
 
     try {
         if (reminderType === 'report') {
@@ -105,12 +122,11 @@ async function handleReminderJob(job) {
                 }
             }
 
-            // WhatsApp — check connection before attempting
+            // WhatsApp
             if (settings.enable_whatsapp_reminders || reminderType === 'whatsapp') {
                 try {
                     if (!whatsappClient.isReady()) {
-                        // Throw so pg-boss retries — user must connect WA before reminder time
-                        throw new Error('WhatsApp client is not connected — pg-boss will retry');
+                        throw new Error('WhatsApp client is not connected — will retry');
                     }
                     logger.info(`[worker] Sending WhatsApp reminders (type=${reminderType})...`);
                     await sendWhatsAppReminders(settings, reminderType);
@@ -129,51 +145,31 @@ async function handleReminderJob(job) {
 
     // ── Update tracking row ────────────────────────────
     if (trackingRow) {
-        if (errors.length > 0 && !emailSent && !whatsappSent) {
-            // Both channels failed — throw so pg-boss retries
-            await reminderJobQueries.updateJobStatus(trackingRow.id, {
-                status: 'pending',   // Back to pending so next attempt can reset to processing
-                last_error: errors.join('; '),
-            });
-            throw new Error(errors.join('; '));
-        }
+        const allFailed = errors.length > 0 && !emailSent && !whatsappSent;
 
-        await reminderJobQueries.updateJobStatus(trackingRow.id, {
-            status: 'sent',
-            processed_at: new Date(),
-            last_error: errors.length > 0 ? errors.join('; ') : null,
-        });
+        if (allFailed) {
+            if (isFinalAttempt) {
+                // Final attempt — mark permanently failed, don't throw
+                await handleFailedJob(job, errors.join('; '));
+            } else {
+                // More retries remaining — reset to pending and throw to trigger retry
+                await reminderJobQueries.updateJobStatus(trackingRow.id, {
+                    status: 'pending',
+                    last_error: errors.join('; '),
+                });
+                throw new Error(errors.join('; '));
+            }
+        } else {
+            // At least one channel succeeded
+            await reminderJobQueries.updateJobStatus(trackingRow.id, {
+                status: 'sent',
+                processed_at: new Date(),
+                last_error: errors.length > 0 ? errors.join('; ') : null,
+            });
+        }
     }
 
     logger.info(`[worker] Job ${job.id} completed successfully`);
-}
-
-// ════════════════════════════════════════
-// Handle final failures (exhausted retries)
-// ════════════════════════════════════════
-
-/**
- * Called by pg-boss when a job has exhausted all retries.
- */
-async function handleFailedJob(job) {
-    const { settingsId, reminderType } = job.data || {};
-    logger.error(`[worker] Job ${job.id} failed permanently after all retries | type=${reminderType} | settingsId=${settingsId}`);
-
-    if (settingsId && reminderType) {
-        try {
-            const jobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
-            const trackingRow = jobs.find(j => j.reminder_type === reminderType && j.status !== 'cancelled');
-            if (trackingRow) {
-                await reminderJobQueries.updateJobStatus(trackingRow.id, {
-                    status: 'failed',
-                    last_error: `Exhausted all retries. Last error: ${job.output?.message || 'Unknown'}`,
-                    processed_at: new Date(),
-                });
-            }
-        } catch (err) {
-            logger.error('[worker] Failed to update tracking row for exhausted job:', err);
-        }
-    }
 }
 
 // ════════════════════════════════════════
@@ -183,21 +179,16 @@ async function handleFailedJob(job) {
 async function start() {
     logger.info('[worker] Starting reminder worker...');
 
-    // Ensure reminder_jobs table exists before processing any jobs
     await reminderJobQueries.ensureTable();
     logger.info('[worker] reminder_jobs table verified');
 
     const boss = await getBoss();
 
-    // Register handler — teamSize:1 prevents concurrent job processing
-    await boss.work(JOB_NAME, { teamSize: 1, teamConcurrency: 1 }, handleReminderJob);
+    // ✅ Create queue explicitly (required in pg-boss v9+)
+    await boss.createQueue(JOB_NAME);
 
-    // Register failure hook for exhausted retries
-    await boss.onComplete(JOB_NAME, async (job) => {
-        if (job.data.state === 'failed') {
-            await handleFailedJob(job);
-        }
-    });
+    // ✅ Single worker registration
+    await boss.work(JOB_NAME, { teamSize: 1, teamConcurrency: 1 }, handleReminderJob);
 
     logger.info(`[worker] Listening for '${JOB_NAME}' jobs`);
 }
