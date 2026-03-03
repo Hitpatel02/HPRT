@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Table, Button, Modal, Form, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { selectToken, setInitialDataLoaded } from '../redux/authSlice';
-import LoadingSpinner from './common/LoadingSpinner';
+import PageLoader from './common/PageLoader';
 import { clientsAPI, documentsAPI } from '../api';
 
 const ClientList = () => {
@@ -260,7 +260,7 @@ const ClientList = () => {
   if (loading) {
     return (
       <div className="container-fluid px-4">
-        <LoadingSpinner message="Loading clients..." />
+        <PageLoader message="Loading clients..." />
       </div>
     );
   }
@@ -355,7 +355,7 @@ const ClientList = () => {
         <Modal.Header closeButton={!isCreating}>
           <Modal.Title>Add New Client</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="overflow-auto" style={{ maxHeight: '110vh' }}>
+        <Modal.Body className="overflow-y-auto" style={{ maxHeight: '70vh' }}>
           {validationError && <Alert variant="danger">{validationError}</Alert>}
           <Form onSubmit={handleAddClient}>
             <Form.Group className="mb-3">

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap';
+import { Card, Form, Button, Alert, Spinner, Row, Col, Container } from 'react-bootstrap';
 import { format, parse } from 'date-fns';
 import { formatDateForDisplay, getTodayDate } from '../utils/dateUtils';
 import CommunicationDateInput, { DatePickerProvider } from './common/CommunicationDateInput';
 import SetReminderDates from './SetReminderDates';
-import WhatsAppControl from './WhatsAppControls';
 import ReminderToggles from './ReminderToggles';
 import { selectToken, setInitialDataLoaded } from '../redux/authSlice';
-import LoadingSpinner from './common/LoadingSpinner';
+import PageLoader from './common/PageLoader';
 import { settingsAPI } from '../api';
 import axios from 'axios';
 
@@ -551,27 +550,12 @@ const ReminderSettings = () => {
       <DatePickerProvider>
         <div className="content-section">
           {loading ? (
-            <LoadingSpinner />
+            <PageLoader message="Loading settings..." />
           ) : error ? (
             <Alert variant="danger">{error}</Alert>
           ) : (
             <>
               {successMessage && <Alert variant="success">{successMessage}</Alert>}
-
-              <Card className="mb-4">
-                <Card.Header as="h5">WhatsApp Connection</Card.Header>
-                <Card.Body>
-                  <WhatsAppControl />
-                </Card.Body>
-              </Card>
-              
-              {settings && Object.keys(settings).length > 0 && (
-                <ReminderToggles 
-                  settings={settings} 
-                  onSettingsUpdated={fetchSettings} 
-                />
-              )}
-              
               <Card className="mb-4">
                 <Card.Header as="h5">How Reminders Work</Card.Header>
                 <Card.Body>

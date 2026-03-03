@@ -1213,3 +1213,15 @@ TROUBLESHOOTING: https://pptr.dev/troubleshooting
 2026-03-02 16:57:17 error: [worker] Fatal startup error: PgBoss is not a constructor
 2026-03-02 16:57:17 error: [worker] Fatal startup error: PgBoss is not a constructor
 2026-03-02 16:57:18 error: [worker] Fatal startup error: PgBoss is not a constructor
+2026-03-04 00:41:16 error: [whatsappClient] Fatal init error: Navigation failed because browser has disconnected!
+2026-03-04 00:41:16 error: Unhandled Promise Rejection:
+2026-03-04 02:11:26 error: [POST] /api/auth/login?_t=1772570485741 — 400: Cannot find module '../encodings'
+Require stack:
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\iconv-lite\lib\index.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\raw-body\index.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\body-parser\lib\read.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\body-parser\lib\types\json.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\body-parser\index.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\express\lib\express.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\express\index.js
+- C:\Users\admin\OneDrive\Desktop\HPRT\backend\server.js

@@ -94,6 +94,9 @@ async function scheduleRemindersFromSettings(settings) {
             scheduledFor: scheduledFor.toISOString(),
         };
 
+        // Ensure queue exists before sending
+        await boss.createQueue(JOB_NAME);
+
         // Send to pg-boss with retry config
         const bossJobId = await boss.send(JOB_NAME, payload, {
             startAfter: scheduledFor,
@@ -148,6 +151,10 @@ async function cancelRemindersForSettings(settingsId) {
  */
 async function triggerImmediately(reminderType, payload = {}) {
     const boss = await getBoss();
+
+    // Ensure queue exists before sending
+    await boss.createQueue(JOB_NAME);
+
     const jobId = await boss.send(JOB_NAME, { reminderType, ...payload, immediate: true }, {
         startAfter: new Date(),
         retryLimit: 3,

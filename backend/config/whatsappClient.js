@@ -13,6 +13,8 @@ const path = require('path');
 const fs = require('fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { logger } = require('../utils/logger');
+const { validateGroupId } = require('../utils/whatsappUtils');
+const loggingService = require('../services/loggingService');
 
 // ── Session path (inside backend, controlled) ─────────────────────────
 const SESSION_PATH = path.resolve(__dirname, '../whatsapp-session');
@@ -123,6 +125,16 @@ function attachListeners(client) {
 
     client.on('change_state', (state) => {
         logger.debug(`[whatsappClient] State changed: ${state}`);
+    });
+
+    // ── Group ID Retrieval Listener ───────────────────────────────────────
+    client.on('message', async (message) => {
+        // Prevent importing whatsappGroupService immediately to avoid circular dependencies
+        const { isGroupIdRetrievalActive, handleGroupIdMessage } = require('../services/whatsappGroupService');
+
+        if (message.body === '!groupid' && isGroupIdRetrievalActive()) {
+            await handleGroupIdMessage(client, message);
+        }
     });
 }
 

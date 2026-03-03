@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectToken } from '../redux/authSlice';
 import { documentsAPI } from '../api';
 import { getPreviousMonthFormatted } from '../utils/dateUtils';
+import PageLoader from './common/PageLoader';
 
 const DocumentStatus = () => {
   const token = useSelector(selectToken);
@@ -95,12 +96,7 @@ const DocumentStatus = () => {
       </Card>
       
       {loading ? (
-        <div className="text-center my-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-          <p className="mt-2">Loading document status...</p>
-        </div>
+        <PageLoader message="Loading document status..." />
       ) : (
         <>
           <h3>Pending Documents</h3>

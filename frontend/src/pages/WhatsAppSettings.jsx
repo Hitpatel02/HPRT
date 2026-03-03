@@ -7,11 +7,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Container, Card } from 'react-bootstrap';
 import { io } from 'socket.io-client';
-import { useSelector } from 'react-redux';
 import { selectToken } from '../redux/authSlice';
 import WhatsAppQR from '../components/WhatsAppQR';
 import WhatsAppControls from '../components/WhatsAppControls';
 import '../css/WhatsAppSettings.css';
+import axios from 'axios';
 
 // Connect to the same origin as the API; adjust if frontend is on a different port
 const SOCKET_URL = import.meta.env.VITE_API_URL || window.location.origin;
@@ -25,7 +25,18 @@ export default function WhatsAppSettings() {
     const [info, setInfo] = useState(null);
     const [socketConnected, setSocketConnected] = useState(false);
 
+    // New features state
+    const [testGroupId, setTestGroupId] = useState('');
+    const [testMessageLoading, setTestMessageLoading] = useState(false);
+    const [testMessageFeedback, setTestMessageFeedback] = useState(null);
+    const [groupRetrievalActive, setGroupRetrievalActive] = useState(false);
+
     const socketRef = useRef(null);
+
+    // Helper for API calls
+    const getAuthHeaders = () => ({
+        headers: { Authorization: `Bearer ${token}` }
+    });
 
     useEffect(() => {
         // Establish socket connection with auth
@@ -154,8 +165,94 @@ export default function WhatsAppSettings() {
                 )}
             </div>
 
+            {/* WhatsApp Features Area */}
+            {state === 'CONNECTED' && (
+                <div className="wa-settings-grid mt-4">
+                    {/* Test Message Panel */}
+                    <Card className="wa-card">
+                        <Card.Header className="wa-card-header">Test Message</Card.Header>
+                        <Card.Body>
+                            <p className="text-muted small">
+                                Send a test message to ensure the bot can successfully message a specific group.
+                            </p>
+                            <div className="d-flex flex-column gap-2 mb-3">
+                                <label className="form-label mb-0 fw-bold">Group ID</label>
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    placeholder="e.g. 120363384178779045@g.us"
+                                    value={testGroupId}
+                                    onChange={(e) => setTestGroupId(e.target.value)}
+                                />
+                            </div>
+                            <button 
+                                className="btn btn-primary w-100"
+                                onClick={async () => {
+                                    if (!testGroupId.trim()) {
+                                        setTestMessageFeedback({ type: 'danger', text: 'Please enter a Group ID' });
+                                        return;
+                                    }
+                                    setTestMessageLoading(true);
+                                    setTestMessageFeedback(null);
+                                    try {
+                                        await axios.post(`${SOCKET_URL}/api/whatsapp/test`, { groupId: testGroupId }, getAuthHeaders());
+                                        setTestMessageFeedback({ type: 'success', text: 'Test message sent successfully!' });
+                                    } catch (err) {
+                                        setTestMessageFeedback({ type: 'danger', text: err.response?.data?.message || 'Failed to send test message' });
+                                    } finally {
+                                        setTestMessageLoading(false);
+                                    }
+                                }}
+                                disabled={testMessageLoading || !testGroupId.trim()}
+                            >
+                                {testMessageLoading ? 'Sending...' : 'Send Test Message'}
+                            </button>
+                            {testMessageFeedback && (
+                                <div className={`alert alert-${testMessageFeedback.type} mt-3 py-2 px-3 mb-0 small`}>
+                                    {testMessageFeedback.text}
+                                </div>
+                            )}
+                        </Card.Body>
+                    </Card>
+
+                    {/* Group ID Lookup Panel */}
+                    <Card className="wa-card">
+                        <Card.Header className="wa-card-header">Group ID Lookup</Card.Header>
+                        <Card.Body>
+                            <p className="text-muted small mb-3">
+                                Need to find a group ID? Start lookup mode and send <strong>!groupid</strong> in the WhatsApp group. The bot will automatically reply with the ID.
+                            </p>
+                            {groupRetrievalActive ? (
+                                <div className="p-3 border rounded bg-light mb-3 text-center">
+                                    <h6 className="text-primary mb-2">🟢 Lookup Mode Active</h6>
+                                    <p className="small mb-0">Waiting for <strong>!groupid</strong> messages in WhatsApp...</p>
+                                </div>
+                            ) : null}
+                            <button 
+                                className={`btn ${groupRetrievalActive ? 'btn-danger' : 'btn-outline-primary'} w-100`}
+                                onClick={async () => {
+                                    try {
+                                        if (groupRetrievalActive) {
+                                            await axios.post(`${SOCKET_URL}/api/whatsapp/group-id/stop`, {}, getAuthHeaders());
+                                            setGroupRetrievalActive(false);
+                                        } else {
+                                            await axios.post(`${SOCKET_URL}/api/whatsapp/group-id/start`, {}, getAuthHeaders());
+                                            setGroupRetrievalActive(true);
+                                        }
+                                    } catch (err) {
+                                        alert(err.response?.data?.message || 'Action failed');
+                                    }
+                                }}
+                            >
+                                {groupRetrievalActive ? 'Stop Lookup Mode' : 'Start Lookup Mode'}
+                            </button>
+                        </Card.Body>
+                    </Card>
+                </div>
+            )}
+
             {/* Help section */}
-            <Card className="wa-card wa-card--help">
+            <Card className="wa-card wa-card--help mt-4">
                 <Card.Header className="wa-card-header">How it works</Card.Header>
                 <Card.Body>
                     <ol className="wa-help-list">

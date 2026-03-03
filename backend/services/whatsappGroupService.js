@@ -34,58 +34,63 @@ function getReadyClient() {
 // ── Group ID Retrieval ─────────────────────────────────────────────────────
 
 /**
- * Start listening for !groupid messages on all connected groups.
- * Requires WhatsApp to already be connected (initialized via connect endpoint).
+ * Start group ID retrieval mode.
+ * The actual message listening is now handled centrally in whatsappClient.js
  *
  * @returns {boolean} success
  */
 const startGroupIdRetrieval = async () => {
     try {
-        const client = getReadyClient();
-
         if (groupIdRetrievalMode) {
             logger.info('[whatsappGroupService] Group ID retrieval already active');
             return true;
         }
 
         groupIdRetrievalMode = true;
-
-        // Remove any existing handlers to avoid duplicates
-        client.removeAllListeners('message');
-
-        client.on('message', async (message) => {
-            if (message.body !== '!groupid') return;
-
-            const groupId = message.from;
-            if (!validateGroupId(groupId)) return;
-
-            logger.info(`[whatsappGroupService] Group ID retrieved: ${groupId}`);
-
-            try {
-                await client.sendMessage(
-                    groupId,
-                    `Group ID: ${groupId}\n\nUse this ID to configure client WhatsApp reminders.\n\n(Test message — please ignore.)`
-                );
-
-                await loggingService.logWhatsAppMessage({
-                    client_id: null,
-                    group_id: groupId,
-                    message: '!groupid',
-                    status: 'received',
-                });
-
-                if (groupIdCallback) groupIdCallback(groupId);
-            } catch (err) {
-                logger.error('[whatsappGroupService] Error responding to !groupid:', err.message);
-            }
-        });
-
         logger.info('[whatsappGroupService] Group ID retrieval mode started — send !groupid in a group');
         return true;
     } catch (err) {
         logger.error('[whatsappGroupService] Failed to start group ID retrieval:', err.message);
         groupIdRetrievalMode = false;
         return false;
+    }
+};
+
+/**
+ * Check if the group ID retrieval mode is currently active
+ * @returns {boolean}
+ */
+const isGroupIdRetrievalActive = () => groupIdRetrievalMode;
+
+/**
+ * Handle incoming !groupid messages. Called from whatsappClient message listener.
+ * @param {Object} client - The whatsapp client instance
+ * @param {Object} message - The incoming message object
+ */
+const handleGroupIdMessage = async (client, message) => {
+    if (!groupIdRetrievalMode) return;
+
+    const groupId = message.from;
+    if (!validateGroupId(groupId)) return;
+
+    logger.info(`[whatsappGroupService] Group ID retrieved: ${groupId}`);
+
+    try {
+        await client.sendMessage(
+            groupId,
+            `Group ID: ${groupId}\n\nUse this ID to configure client WhatsApp reminders.\n\n(Test message — please ignore.)`
+        );
+
+        await loggingService.logWhatsAppMessage({
+            client_id: null,
+            group_id: groupId,
+            message: '!groupid',
+            status: 'received',
+        });
+
+        if (groupIdCallback) groupIdCallback(groupId);
+    } catch (err) {
+        logger.error('[whatsappGroupService] Error responding to !groupid:', err.message);
     }
 };
 
@@ -97,11 +102,6 @@ const stopGroupIdRetrieval = async () => {
     try {
         groupIdRetrievalMode = false;
         groupIdCallback = null;
-
-        // Remove the message listener if client is still connected
-        if (whatsappClient.client) {
-            whatsappClient.client.removeAllListeners('message');
-        }
 
         logger.info('[whatsappGroupService] Group ID retrieval mode stopped');
         return true;
@@ -176,4 +176,6 @@ module.exports = {
     startGroupIdRetrieval,
     stopGroupIdRetrieval,
     onGroupIdRetrieved,
+    isGroupIdRetrievalActive,
+    handleGroupIdMessage,
 };
