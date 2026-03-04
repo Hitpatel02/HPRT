@@ -6,6 +6,7 @@
  */
 import React, { useEffect, useState, useRef } from 'react';
 import { Container, Card } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import { selectToken } from '../redux/authSlice';
 import WhatsAppQR from '../components/WhatsAppQR';
@@ -91,6 +92,13 @@ export default function WhatsAppSettings() {
         });
 
         return () => {
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('whatsapp:status');
+            socket.off('whatsapp:qr');
+            socket.off('whatsapp:ready');
+            socket.off('whatsapp:disconnected');
+            socket.off('whatsapp:error');
             socket.disconnect();
             socketRef.current = null;
         };

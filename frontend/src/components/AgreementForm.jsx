@@ -13,6 +13,37 @@ const INITIAL_FORM = {
     agreement_date: '',
 };
 
+
+const Field = React.memo(({ label, name, type = 'text', placeholder, required = true, value, onChange, error }) => (
+    <div className="agf-field">
+        <label htmlFor={name} className="agf-label">
+            {label}{required && <span className="agf-required">*</span>}
+        </label>
+        {name === 'address' ? (
+            <textarea
+                id={name}
+                name={name}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                rows={3}
+                className={`agf-input agf-textarea ${error ? 'agf-input--error' : ''}`}
+            />
+        ) : (
+            <input
+                id={name}
+                name={name}
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`agf-input ${error ? 'agf-input--error' : ''}`}
+            />
+        )}
+        {error && <span className="agf-error">{error}</span>}
+    </div>
+));
+
 /**
  * AgreementForm
  *
@@ -79,44 +110,32 @@ export default function AgreementForm({ onGenerate, isLoading }) {
         });
     };
 
-    const Field = ({ label, name, type = 'text', placeholder, required = true }) => (
-        <div className="agf-field">
-            <label htmlFor={name} className="agf-label">
-                {label}{required && <span className="agf-required">*</span>}
-            </label>
-            {name === 'address' ? (
-                <textarea
-                    id={name}
-                    name={name}
-                    value={form[name]}
-                    onChange={handleChange}
-                    placeholder={placeholder}
-                    rows={3}
-                    className={`agf-input agf-textarea ${errors[name] ? 'agf-input--error' : ''}`}
-                />
-            ) : (
-                <input
-                    id={name}
-                    name={name}
-                    type={type}
-                    value={form[name]}
-                    onChange={handleChange}
-                    placeholder={placeholder}
-                    className={`agf-input ${errors[name] ? 'agf-input--error' : ''}`}
-                />
-            )}
-            {errors[name] && <span className="agf-error">{errors[name]}</span>}
-        </div>
-    );
-
     return (
         <form onSubmit={handleSubmit} className="agf-form" noValidate>
-            <Field label="Client Name"      name="client_name"    placeholder="e.g. Sharma Enterprises" />
-            <Field label="PAN Number"       name="pan_number"     placeholder="e.g. ABCDE1234F" />
-            <Field label="Fee Percentage"   name="percentage"     type="number" placeholder="e.g. 18" />
-            <Field label="Party / Firm Name" name="party_name"   placeholder="e.g. HPRT Associates" />
-            <Field label="Client Address"   name="address"        placeholder="Full registered address" />
-            <Field label="Agreement Date"   name="agreement_date" type="date" placeholder="" />
+            <Field 
+                label="Client Name" name="client_name" placeholder="e.g. Sharma Enterprises" 
+                value={form.client_name} onChange={handleChange} error={errors.client_name} 
+            />
+            <Field 
+                label="PAN Number" name="pan_number" placeholder="e.g. ABCDE1234F" 
+                value={form.pan_number} onChange={handleChange} error={errors.pan_number} 
+            />
+            <Field 
+                label="Fee Percentage" name="percentage" type="number" placeholder="e.g. 18" 
+                value={form.percentage} onChange={handleChange} error={errors.percentage} 
+            />
+            <Field 
+                label="Party / Firm Name" name="party_name" placeholder="e.g. HPRT Associates" 
+                value={form.party_name} onChange={handleChange} error={errors.party_name} 
+            />
+            <Field 
+                label="Client Address" name="address" placeholder="Full registered address" 
+                value={form.address} onChange={handleChange} error={errors.address} 
+            />
+            <Field 
+                label="Agreement Date" name="agreement_date" type="date" placeholder="" 
+                value={form.agreement_date} onChange={handleChange} error={errors.agreement_date} 
+            />
 
             <button
                 type="submit"

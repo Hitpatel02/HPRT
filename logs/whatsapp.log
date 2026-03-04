@@ -1831,3 +1831,210 @@ Require stack:
 - C:\Users\admin\OneDrive\Desktop\HPRT\backend\node_modules\express\index.js
 - C:\Users\admin\OneDrive\Desktop\HPRT\backend\server.js
 2026-03-04 02:12:58 info: SIGINT received — shutting down gracefully
+2026-03-04 02:26:10 info: [socket] WhatsApp socket handler registered
+2026-03-04 02:26:10 info: ✅ Server running on port 8080 [development]
+2026-03-04 02:26:11 info: ✅ reminder_jobs table verified
+2026-03-04 02:26:12 info: [pg-boss] Started successfully
+2026-03-04 02:26:12 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-04 02:26:12 info: ✅ Scheduler initialized
+2026-03-04 02:31:58 info: [agreementController] Generating PDF for client: xyz
+2026-03-04 02:31:58 info: [agreementService] Generating PDF for: xyz
+2026-03-04 02:32:03 info: [agreementService] PDF generated (129755 bytes) for: xyz
+2026-03-04 02:32:04 debug: [agreementService] Browser closed
+2026-03-04 02:33:21 info: Created document for client Om patel (HIT) (ID: 93) for month March 2026
+2026-03-04 02:49:26 info: SIGINT received — shutting down gracefully
+2026-03-04 02:53:58 info: [socket] WhatsApp socket handler registered
+2026-03-04 02:53:58 info: ✅ Server running on port 8080 [development]
+2026-03-04 02:53:58 info: ✅ reminder_jobs table verified
+2026-03-04 02:53:58 info: [pg-boss] Started successfully
+2026-03-04 02:53:58 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-04 02:53:58 info: ✅ Scheduler initialized
+2026-03-04 02:54:13 debug: [socket] Client connected: mM9Kal8-jwo4zNzvAAAB
+2026-03-04 02:54:19 debug: [socket] Client disconnected: mM9Kal8-jwo4zNzvAAAB
+2026-03-04 02:54:47 debug: [socket] Client connected: OnbBBRs9mJYQSPwEAAAD
+2026-03-04 02:54:49 info: [whatsappClient] Initializing client...
+2026-03-04 02:55:03 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 02:56:15 info: [whatsappClient] Authenticated
+2026-03-04 02:56:15 info: [whatsappClient] Authenticated
+2026-03-04 02:56:15 info: [whatsappClient] Authenticated
+2026-03-04 02:56:58 debug: [socket] Client disconnected: OnbBBRs9mJYQSPwEAAAD
+2026-03-04 02:57:01 debug: [socket] Client connected: -2wh8Lnq_jjzt_BoAAAF
+2026-03-04 02:57:11 debug: [socket] Client disconnected: -2wh8Lnq_jjzt_BoAAAF
+2026-03-04 02:57:45 debug: [socket] Client connected: UEtCDwcIroJPQYdmAAAH
+2026-03-04 02:58:02 debug: [socket] Client disconnected: UEtCDwcIroJPQYdmAAAH
+2026-03-04 02:58:17 debug: [socket] Client connected: XeJ7xTs1eeWsSdA2AAAJ
+2026-03-04 02:58:20 debug: [socket] Client disconnected: XeJ7xTs1eeWsSdA2AAAJ
+2026-03-04 02:59:32 warn: [whatsappClient] Already initializing — ignoring duplicate init call
+2026-03-04 02:59:32 debug: [socket] Client connected: nBJ-aNj2tH8_BZY5AAAL
+2026-03-04 02:59:41 info: [whatsappClient] Authenticated
+2026-03-04 02:59:41 info: [whatsappClient] Authenticated
+2026-03-04 02:59:41 info: [whatsappClient] Authenticated
+2026-03-04 02:59:43 info: [whatsappClient] Authenticated
+2026-03-04 03:00:08 info: [whatsappClient] Client is ready
+2026-03-04 03:00:08 info: [whatsappClient] Client is ready
+2026-03-04 03:00:08 info: [whatsappClient] Client is ready
+2026-03-04 03:00:08 info: [whatsappClient] Client is ready
+2026-03-04 03:00:17 info: [whatsappClient] Disconnecting...
+2026-03-04 03:00:17 error: Unhandled Promise Rejection:
+2026-03-04 03:00:17 error: Unhandled Promise Rejection:
+2026-03-04 03:00:22 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 03:00:24 info: [whatsappClient] Initializing client...
+2026-03-04 03:00:40 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 03:01:16 debug: [socket] Client disconnected: nBJ-aNj2tH8_BZY5AAAL
+2026-03-04 03:01:19 info: [whatsappClient] Authenticated
+2026-03-04 03:01:19 info: [whatsappClient] Authenticated
+2026-03-04 03:01:19 info: [whatsappClient] Authenticated
+2026-03-04 03:01:57 info: [reminderScheduler] Scheduled gst_1 reminder for 2026-03-04T21:35:00.000Z (boss job: 4a9572c3-e9e7-4df5-b58a-0b3700cc4e05)
+2026-03-04 03:01:57 info: [reminderScheduler] Scheduled gst_2 reminder for 2026-03-08T21:35:00.000Z (boss job: 05bca5a4-d765-4977-ba25-5765861e6075)
+2026-03-04 03:01:57 info: [reminderScheduler] Skipping tds_1 — scheduled time 2026-03-01T21:35:00.000Z is in the past
+2026-03-04 03:01:57 info: [reminderScheduler] Scheduled tds_2 reminder for 2026-03-03T21:35:00.000Z (boss job: 85a745f5-8328-4090-82fb-0e844ac06ca5)
+2026-03-04 03:02:27 debug: [socket] Client connected: c13TcCOASbTyHNR2AAAN
+2026-03-04 03:06:39 debug: [socket] Client disconnected: c13TcCOASbTyHNR2AAAN
+2026-03-04 03:07:31 debug: [socket] Client connected: 9RRbrjppQC2fMcvfAAAP
+2026-03-04 03:07:34 info: [whatsappClient] Disconnecting...
+2026-03-04 03:07:37 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 03:07:38 debug: [socket] Client disconnected: 9RRbrjppQC2fMcvfAAAP
+2026-03-04 03:07:39 debug: [socket] Client connected: B1k6pjEXH_Xock_VAAAR
+2026-03-04 03:07:42 info: [whatsappClient] Initializing client...
+2026-03-04 03:08:15 debug: [socket] Client disconnected: B1k6pjEXH_Xock_VAAAR
+2026-03-04 03:13:19 debug: [socket] Client connected: GmCvpAts-RvO807zAAAT
+2026-03-04 03:13:41 debug: [socket] Client disconnected: GmCvpAts-RvO807zAAAT
+2026-03-04 03:14:21 debug: [socket] Client connected: JkpYD4V8KI0_bAL_AAAV
+2026-03-04 03:15:58 info: [whatsappClient] Disconnecting...
+2026-03-04 03:16:03 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 03:16:11 info: [whatsappClient] Deleting session...
+2026-03-04 03:16:13 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 03:16:16 info: [whatsappClient] Created session directory: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 03:16:16 info: [whatsappClient] Initializing client...
+2026-03-04 03:16:39 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 03:17:29 info: [whatsappClient] Authenticated
+2026-03-04 03:17:29 debug: [socket] Client disconnected: JkpYD4V8KI0_bAL_AAAV
+2026-03-04 03:17:32 debug: [socket] Client connected: --Zpz8a5uW6PnhtoAAAX
+2026-03-04 03:18:02 debug: [socket] Client disconnected: --Zpz8a5uW6PnhtoAAAX
+2026-03-04 03:19:13 info: [reminderScheduler] Skipping gst_1 — job already scheduled for settingsId=14
+2026-03-04 03:19:13 info: [reminderScheduler] Skipping gst_2 — job already scheduled for settingsId=14
+2026-03-04 03:19:13 info: [reminderScheduler] Skipping tds_1 — scheduled time 2026-03-02T21:55:00.000Z is in the past
+2026-03-04 03:19:13 info: [reminderScheduler] Skipping tds_2 — job already scheduled for settingsId=14
+2026-03-04 03:19:34 debug: [socket] Client connected: VS7gqmcN9jq-gXDQAAAZ
+2026-03-04 03:19:38 debug: [socket] Client disconnected: VS7gqmcN9jq-gXDQAAAZ
+2026-03-04 03:20:05 debug: [socket] Client connected: On7X_hdKHCBl3bn1AAAb
+2026-03-04 03:20:08 debug: [socket] Client disconnected: On7X_hdKHCBl3bn1AAAb
+2026-03-04 03:20:11 debug: [socket] Client connected: PaaBBsGgUewiiUfbAAAd
+2026-03-04 03:20:32 info: [whatsappClient] Disconnecting...
+2026-03-04 03:20:39 debug: [socket] Client disconnected: PaaBBsGgUewiiUfbAAAd
+2026-03-04 03:20:40 debug: [socket] Client connected: rsEDflQEIZ2h1xjtAAAf
+2026-03-04 03:20:45 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 03:23:04 debug: [socket] Client disconnected: rsEDflQEIZ2h1xjtAAAf
+2026-03-04 04:01:44 info: [socket] WhatsApp socket handler registered
+2026-03-04 04:01:44 info: ✅ Server running on port 8080 [development]
+2026-03-04 04:01:46 info: ✅ reminder_jobs table verified
+2026-03-04 04:01:48 info: [pg-boss] Started successfully
+2026-03-04 04:01:48 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-04 04:01:48 info: ✅ Scheduler initialized
+2026-03-04 04:05:46 debug: [socket] Client connected: NgB8iMnSjMB5pxTxAAAB
+2026-03-04 04:05:47 info: [whatsappClient] Initializing client...
+2026-03-04 04:07:36 info: [socket] WhatsApp socket handler registered
+2026-03-04 04:07:36 info: ✅ Server running on port 8080 [development]
+2026-03-04 04:07:36 info: ✅ reminder_jobs table verified
+2026-03-04 04:07:36 info: [pg-boss] Started successfully
+2026-03-04 04:07:36 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-04 04:07:36 info: ✅ Scheduler initialized
+2026-03-04 04:07:59 debug: [socket] Client connected: Nw1olBzAoVGFnTfGAAAB
+2026-03-04 04:08:01 info: [whatsappClient] Initializing client...
+2026-03-04 04:08:23 info: [whatsappClient] Authenticated
+2026-03-04 04:08:35 error: DB query error (attempt 1/3):
+2026-03-04 04:09:15 debug: [socket] Client connected: qRI140eq2ZIYCPYZAAAD
+2026-03-04 04:09:18 debug: [socket] Client disconnected: qRI140eq2ZIYCPYZAAAD
+2026-03-04 04:09:43 debug: [socket] Client connected: P_CFNMRUed8Ei1QWAAAF
+2026-03-04 04:09:53 debug: [socket] Client disconnected: P_CFNMRUed8Ei1QWAAAF
+2026-03-04 04:09:55 debug: [socket] Client connected: Z6D0H7iw8k6CqSCbAAAH
+2026-03-04 04:13:11 info: [whatsappClient] Disconnecting...
+2026-03-04 04:13:14 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 04:13:19 info: [whatsappClient] Deleting session...
+2026-03-04 04:13:21 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 04:13:23 info: [whatsappClient] Created session directory: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 04:13:23 info: [whatsappClient] Initializing client...
+2026-03-04 04:13:46 debug: [socket] Client disconnected: Nw1olBzAoVGFnTfGAAAB
+2026-03-04 04:13:47 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 04:14:46 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 04:15:12 debug: [socket] Client disconnected: Z6D0H7iw8k6CqSCbAAAH
+2026-03-04 04:15:14 debug: [socket] Client connected: aUZxBNvriBF9p_CSAAAJ
+2026-03-04 04:15:20 info: [whatsappClient] Authenticated
+2026-03-04 04:15:21 info: [whatsappClient] Authenticated
+2026-03-04 04:15:21 info: [whatsappClient] Authenticated
+2026-03-04 04:15:26 debug: [socket] Client disconnected: aUZxBNvriBF9p_CSAAAJ
+2026-03-04 04:15:26 debug: [socket] Client connected: XfRmqINhE0UWOPEKAAAL
+2026-03-04 04:15:58 info: [reminderScheduler] Skipping gst_1 — job already scheduled for settingsId=14
+2026-03-04 04:15:59 info: [reminderScheduler] Skipping gst_2 — job already scheduled for settingsId=14
+2026-03-04 04:15:59 info: [reminderScheduler] Skipping tds_1 — scheduled time 2026-03-02T21:47:00.000Z is in the past
+2026-03-04 04:15:59 info: [reminderScheduler] Skipping tds_2 — job already scheduled for settingsId=14
+2026-03-04 04:19:10 debug: [whatsappClient] State changed: OPENING
+2026-03-04 04:19:11 debug: [whatsappClient] State changed: PAIRING
+2026-03-04 04:19:11 debug: [whatsappClient] State changed: CONNECTED
+2026-03-04 04:19:29 debug: [socket] Client connected: 5ydMMzQOBGiSIxfxAAAN
+2026-03-04 04:21:13 debug: [socket] Client disconnected: 5ydMMzQOBGiSIxfxAAAN
+2026-03-04 04:21:13 debug: [socket] Client disconnected: XfRmqINhE0UWOPEKAAAL
+2026-03-04 04:21:19 info: SIGINT received — shutting down gracefully
+2026-03-04 16:51:28 info: [socket] WhatsApp socket handler registered
+2026-03-04 16:51:28 info: ✅ Server running on port 8080 [development]
+2026-03-04 16:51:28 info: ✅ reminder_jobs table verified
+2026-03-04 16:51:28 info: [pg-boss] Started successfully
+2026-03-04 16:51:28 info: ✅ All scheduled tasks initialized (pg-boss)
+2026-03-04 16:51:28 info: ✅ Scheduler initialized
+2026-03-04 16:54:46 info: [agreementController] Generating PDF for client: vwhhbbgab
+2026-03-04 16:54:46 info: [agreementService] Generating PDF for: vwhhbbgab
+2026-03-04 16:54:51 info: [agreementService] PDF generated (128168 bytes) for: vwhhbbgab
+2026-03-04 16:54:51 debug: [agreementService] Browser closed
+2026-03-04 16:55:29 debug: [socket] Client connected: YRu95QZc7FX0vYnyAAAB
+2026-03-04 16:55:33 info: [whatsappClient] Initializing client...
+2026-03-04 16:55:35 info: [whatsappClient] Disconnecting...
+2026-03-04 16:55:35 error: [whatsappClient] Fatal init error: Navigation failed because browser has disconnected!
+2026-03-04 16:55:35 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 16:55:37 info: [whatsappClient] Deleting session...
+2026-03-04 16:55:39 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 16:55:42 info: [whatsappClient] Created session directory: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 16:55:42 info: [whatsappClient] Initializing client...
+2026-03-04 16:56:02 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 16:56:28 info: [whatsappClient] Disconnecting...
+2026-03-04 16:56:28 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 16:56:30 debug: [socket] Client disconnected: YRu95QZc7FX0vYnyAAAB
+2026-03-04 16:56:31 debug: [socket] Client connected: gFxxRLPkbY43y_d3AAAD
+2026-03-04 16:56:37 debug: [socket] Client disconnected: gFxxRLPkbY43y_d3AAAD
+2026-03-04 16:56:39 debug: [socket] Client connected: dRV3iyHhW_2hqSSVAAAF
+2026-03-04 16:56:41 info: [whatsappClient] Deleting session...
+2026-03-04 16:56:43 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 16:56:45 debug: [socket] Client disconnected: dRV3iyHhW_2hqSSVAAAF
+2026-03-04 16:56:47 debug: [socket] Client connected: WblH7lh7CFZgVSAQAAAH
+2026-03-04 16:57:15 info: [whatsappClient] Created session directory: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 16:57:15 info: [whatsappClient] Initializing client...
+2026-03-04 16:57:30 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 16:58:34 info: [whatsappClient] Authenticated
+2026-03-04 16:58:34 info: [whatsappClient] Authenticated
+2026-03-04 16:58:34 info: [whatsappClient] Authenticated
+2026-03-04 17:00:39 info: [whatsappClient] Disconnecting...
+2026-03-04 17:00:40 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 17:00:41 info: [whatsappClient] Initializing client...
+2026-03-04 17:01:03 info: [whatsappClient] Authenticated
+2026-03-04 17:01:04 info: [whatsappClient] Disconnecting...
+2026-03-04 17:01:05 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 17:01:13 info: [whatsappClient] Deleting session...
+2026-03-04 17:01:15 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 17:01:19 info: [whatsappClient] Deleting session...
+2026-03-04 17:01:20 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 17:01:26 info: [whatsappClient] Created session directory: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 17:01:26 info: [whatsappClient] Initializing client...
+2026-03-04 17:01:51 info: [whatsappClient] QR code generated — emitting to frontend
+2026-03-04 17:02:46 info: [whatsappClient] Authenticated
+2026-03-04 17:02:46 info: [whatsappClient] Authenticated
+2026-03-04 17:02:47 info: [whatsappClient] Authenticated
+2026-03-04 17:03:10 debug: [whatsappClient] State changed: OPENING
+2026-03-04 17:03:11 debug: [whatsappClient] State changed: PAIRING
+2026-03-04 17:03:11 debug: [whatsappClient] State changed: CONNECTED
+2026-03-04 17:06:22 debug: [whatsappClient] State changed: OPENING
+2026-03-04 17:06:33 debug: [socket] Client disconnected: WblH7lh7CFZgVSAQAAAH
+2026-03-04 17:06:35 debug: [socket] Client connected: 25epe5JXOpM-bk1gAAAJ
+2026-03-04 17:06:53 info: [whatsappClient] Disconnecting...
+2026-03-04 17:06:53 info: [whatsappClient] Disconnected and client cleared
+2026-03-04 17:06:56 info: [whatsappClient] Deleting session...
+2026-03-04 17:06:58 info: [whatsappClient] Session directory deleted: C:\Users\admin\OneDrive\Desktop\HPRT\backend\whatsapp-session
+2026-03-04 17:07:08 info: SIGINT received — shutting down gracefully

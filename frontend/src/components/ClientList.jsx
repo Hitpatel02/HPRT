@@ -355,7 +355,7 @@ const ClientList = () => {
         <Modal.Header closeButton={!isCreating}>
           <Modal.Title>Add New Client</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="overflow-y-auto" style={{ maxHeight: '70vh' }}>
+        <Modal.Body>
           {validationError && <Alert variant="danger">{validationError}</Alert>}
           <Form onSubmit={handleAddClient}>
             <Form.Group className="mb-3">

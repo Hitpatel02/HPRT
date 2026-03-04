@@ -77,7 +77,6 @@ function createClient() {
 
 // ── Attach event listeners to a client ───────────────────────────────
 function attachListeners(client) {
-    client.removeAllListeners(); // Prevent accumulation on re-init
 
     client.on('qr', (qr) => {
         logger.info('[whatsappClient] QR code generated — emitting to frontend');
