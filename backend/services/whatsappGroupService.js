@@ -28,7 +28,7 @@ function getReadyClient() {
     if (!whatsappClient.isReady()) {
         throw new Error('WhatsApp client is not connected');
     }
-    return whatsappClient.client;
+    return whatsappClient.getClient();
 }
 
 // ── Group ID Retrieval ─────────────────────────────────────────────────────
@@ -153,7 +153,8 @@ const sendTestMessage = async (groupId, customMessage) => {
         logger.info(`[whatsappGroupService] Test message sent to group ${groupId}`);
         return true;
     } catch (err) {
-        logger.error(`[whatsappGroupService] Error sending test message to ${groupId}:`, err.message);
+        logger.error(`[whatsappGroupService] Error sending test message to ${groupId}: ${err.message}`);
+        logger.error(err.stack);
 
         try {
             await loggingService.logWhatsAppMessage({
