@@ -4,10 +4,14 @@
  * SEPARATE PROCESS — start this independently of the API server:
  *   node workers/reminderWorker.js
  * or via PM2 (see ecosystem.config.js)
+ *
+ * Registers TWO separate handlers:
+ *   send-email-reminder    → handleEmailReminderJob
+ *   send-whatsapp-reminder → handleWhatsAppReminderJob
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { getBoss, stopBoss } = require('../jobs/boss');
-const { JOB_NAME } = require('../jobs/reminderScheduler');
+const { EMAIL_JOB_NAME, WA_JOB_NAME } = require('../jobs/reminderScheduler');
 const { logger } = require('../utils/logger');
 const reminderJobQueries = require('../queries/reminderJobQueries');
 const settingsQueries = require('../queries/settingsQueries');
@@ -16,21 +20,19 @@ const { sendWhatsAppReminders } = require('../services/whatsappService');
 const whatsappClient = require('../config/whatsappClient');
 const { generateMonthlyReport } = require('../services/reportService');
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 
 // ════════════════════════════════════════
 // Handle final failures (exhausted retries)
 // ════════════════════════════════════════
 
-async function handleFailedJob(job, lastError) {
-    // job is already a single unwrapped object here
+async function handleFailedJob(job, lastError, channel) {
     const { settingsId, reminderType } = job.data || {};
-    logger.error(`[worker] Job ${job.id} failed permanently | type=${reminderType} | settingsId=${settingsId}`);
+    logger.error(`[worker] Job ${job.id} failed permanently | type=${reminderType} | channel=${channel} | settingsId=${settingsId}`);
 
     if (settingsId && reminderType) {
         try {
-            const jobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
-            const trackingRow = jobs.find(j => j.reminder_type === reminderType && j.status !== 'cancelled');
+            const trackingRow = await reminderJobQueries.findJobByTypeAndChannel(settingsId, reminderType, channel);
             if (trackingRow) {
                 await reminderJobQueries.updateJobStatus(trackingRow.id, {
                     status: 'failed',
@@ -45,41 +47,47 @@ async function handleFailedJob(job, lastError) {
 }
 
 // ════════════════════════════════════════
-// Worker handler
+// Shared processing logic
 // ════════════════════════════════════════
 
-async function handleReminderJob(jobs) {
+/**
+ * Common handler logic used by both email and WhatsApp handlers.
+ *
+ * @param {Object} jobs     - pg-boss job array (unwrapped internally)
+ * @param {string} channel  - 'email' | 'whatsapp'
+ * @param {Function} sendFn - async (settings, reminderType) => void
+ *                            Should throw if send fails — pg-boss will retry.
+ */
+async function processReminderJob(jobs, channel, sendFn) {
     // ── Unwrap array — pg-boss v12 passes an array even for single jobs ──
     const job = Array.isArray(jobs) ? jobs[0] : jobs;
 
     if (!job || !job.data) {
-        logger.error('[worker] Received job with missing or empty data — skipping');
+        logger.error(`[worker:${channel}] Received job with missing or empty data — skipping`);
         return;
     }
 
-    // Validate required fields before proceeding — prevents crashes from bad payloads
     const { settingsId, reminderType, immediate } = job.data;
 
     if (!reminderType) {
-        logger.error(`[worker] Job ${job.id} missing reminderType — skipping`);
+        logger.error(`[worker:${channel}] Job ${job.id} missing reminderType — skipping`);
         return;
     }
 
     const retryCount = job.retrycount ?? 0;
     const isFinalAttempt = retryCount >= MAX_RETRIES - 1;
 
-    logger.info(`[worker] Processing job ${job.id} | type=${reminderType} | settingsId=${settingsId} | immediate=${!!immediate} | attempt=${retryCount + 1}/${MAX_RETRIES}`);
+    logger.info(`[worker:${channel}] Processing job ${job.id} | type=${reminderType} | settingsId=${settingsId} | immediate=${!!immediate} | attempt=${retryCount + 1}/${MAX_RETRIES}`);
 
     // ── Fetch tracking row ─────────────────────────────
     let trackingRow = null;
     if (!immediate && settingsId && reminderType) {
-        const existingJobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
-        trackingRow = existingJobs.find(j => j.reminder_type === reminderType && j.status !== 'cancelled');
+        trackingRow = await reminderJobQueries.findJobByTypeAndChannel(settingsId, reminderType, channel);
     }
 
     // ── Idempotency guard ──────────────────────────────
     if (trackingRow && trackingRow.status === 'sent') {
-        logger.info(`[worker] Job ${job.id} already marked as sent — skipping`);
+        logger.info(`[worker:${channel}] Job ${job.id} already marked as sent — skipping`);
         return;
     }
 
@@ -98,7 +106,7 @@ async function handleReminderJob(jobs) {
 
     if (!settings) {
         const msg = `No settings found for settingsId=${settingsId}`;
-        logger.error(`[worker] ${msg}`);
+        logger.error(`[worker:${channel}] ${msg}`);
 
         if (trackingRow) {
             await reminderJobQueries.updateJobStatus(trackingRow.id, {
@@ -108,79 +116,77 @@ async function handleReminderJob(jobs) {
             });
         }
 
-        throw new Error(msg);
+        throw new Error(msg); // pg-boss will retry
     }
 
-    // ── Send reminders ─────────────────────────────────
-    let emailSent = false;
-    let whatsappSent = false;
-    const errors = [];
-
+    // ── Send ───────────────────────────────────────────
     try {
-        if (reminderType === 'report') {
-            logger.info('[worker] Generating monthly report...');
-            await generateMonthlyReport();
-            logger.info('[worker] Monthly report generated');
-        } else {
-            // Email
-            if (settings.enable_email_reminders || reminderType === 'email') {
-                try {
-                    logger.info(`[worker] Sending email reminders (type=${reminderType})...`);
-                    await sendEmailReminders(settings, reminderType);
-                    emailSent = true;
-                    logger.info('[worker] Email reminders sent successfully');
-                } catch (err) {
-                    const msg = `Email send failed: ${err.message}`;
-                    logger.error(`[worker] ${msg}`);
-                    errors.push(msg);
-                }
-            }
-
-            // WhatsApp
-            if (settings.enable_whatsapp_reminders || reminderType === 'whatsapp') {
-                try {
-                    if (!whatsappClient.isReady()) {
-                        throw new Error('WhatsApp client is not connected — will retry');
-                    }
-                    logger.info(`[worker] Sending WhatsApp reminders (type=${reminderType})...`);
-                    await sendWhatsAppReminders(settings, reminderType);
-                    whatsappSent = true;
-                    logger.info('[worker] WhatsApp reminders sent successfully');
-                } catch (err) {
-                    const msg = `WhatsApp send failed: ${err.message}`;
-                    logger.error(`[worker] ${msg}`);
-                    errors.push(msg);
-                }
-            }
-        }
+        await sendFn(settings, reminderType);
     } catch (err) {
-        errors.push(err.message);
-    }
+        const msg = err.message || String(err);
+        logger.error(`[worker:${channel}] Send failed: ${msg}`);
 
-    // ── Update tracking row ────────────────────────────
-    if (trackingRow) {
-        const allFailed = errors.length > 0 && !emailSent && !whatsappSent;
-
-        if (allFailed) {
+        if (trackingRow) {
             if (isFinalAttempt) {
-                await handleFailedJob(job, errors.join('; '));
+                await handleFailedJob(job, msg, channel);
             } else {
                 await reminderJobQueries.updateJobStatus(trackingRow.id, {
                     status: 'pending',
-                    last_error: errors.join('; '),
+                    last_error: msg,
                 });
-                throw new Error(errors.join('; '));
             }
-        } else {
-            await reminderJobQueries.updateJobStatus(trackingRow.id, {
-                status: 'sent',
-                processed_at: new Date(),
-                last_error: errors.length > 0 ? errors.join('; ') : null,
-            });
         }
+
+        throw err; // pg-boss will retry
     }
 
-    logger.info(`[worker] Job ${job.id} completed successfully`);
+    // ── Mark sent ──────────────────────────────────────
+    if (trackingRow) {
+        await reminderJobQueries.updateJobStatus(trackingRow.id, {
+            status: 'sent',
+            processed_at: new Date(),
+            last_error: null,
+        });
+    }
+
+    logger.info(`[worker:${channel}] Job ${job.id} completed successfully`);
+}
+
+// ════════════════════════════════════════
+// Email handler
+// ════════════════════════════════════════
+
+async function handleEmailReminderJob(jobs) {
+    await processReminderJob(jobs, 'email', async (settings, reminderType) => {
+        // For 'report' type jobs routed through email queue
+        if (reminderType === 'report') {
+            logger.info('[worker:email] Generating monthly report...');
+            await generateMonthlyReport();
+            logger.info('[worker:email] Monthly report generated');
+            return;
+        }
+
+        logger.info(`[worker:email] Sending email reminders (type=${reminderType})...`);
+        await sendEmailReminders(settings, reminderType);
+        logger.info('[worker:email] Email reminders sent successfully');
+    });
+}
+
+// ════════════════════════════════════════
+// WhatsApp handler
+// ════════════════════════════════════════
+
+async function handleWhatsAppReminderJob(jobs) {
+    await processReminderJob(jobs, 'whatsapp', async (settings, reminderType) => {
+        // Guard: WA must be connected — throw so pg-boss retries (retryDelay=300s)
+        if (!whatsappClient.isReady()) {
+            throw new Error('WhatsApp client is not connected — pg-boss will retry in 5 minutes');
+        }
+
+        logger.info(`[worker:whatsapp] Sending WhatsApp reminders (type=${reminderType})...`);
+        await sendWhatsAppReminders(settings, reminderType);
+        logger.info('[worker:whatsapp] WhatsApp reminders sent successfully');
+    });
 }
 
 // ════════════════════════════════════════
@@ -191,18 +197,22 @@ async function start() {
     logger.info('[worker] Starting reminder worker...');
 
     await reminderJobQueries.ensureTable();
-    logger.info('[worker] reminder_jobs table verified');
+    logger.info('[worker] reminder_jobs table verified (migrations applied)');
 
     const boss = await getBoss();
 
-    await boss.createQueue(JOB_NAME);
-    await boss.work(JOB_NAME, handleReminderJob);
+    // Register both queues
+    await boss.createQueue(EMAIL_JOB_NAME);
+    await boss.createQueue(WA_JOB_NAME);
 
-    logger.info(`[worker] Listening for '${JOB_NAME}' jobs`);
+    // Register both handlers
+    await boss.work(EMAIL_JOB_NAME, handleEmailReminderJob);
+    await boss.work(WA_JOB_NAME, handleWhatsAppReminderJob);
+
+    logger.info(`[worker] Listening for '${EMAIL_JOB_NAME}' and '${WA_JOB_NAME}' jobs`);
 
     // Keep process alive on Windows (dev) and Linux/PM2 (production)
-    // PM2 handles SIGTERM/SIGINT via the process.on handlers below regardless of this
-    await new Promise(() => {});
+    await new Promise(() => { });
 }
 
 // ════════════════════════════════════════

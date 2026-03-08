@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middlewares/auth');
 const { generate } = require('../controllers/agreementController');
 
 /**
@@ -13,3 +13,4 @@ const { generate } = require('../controllers/agreementController');
 router.post('/generate', authenticateToken, generate);
 
 module.exports = router;
+

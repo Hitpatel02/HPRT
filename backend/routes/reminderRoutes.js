@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middlewares/auth');
 const { 
     getReminders, 
     updateReminders, 
@@ -37,3 +37,4 @@ router.delete('/', authenticateToken, resetReminders);
 router.post('/trigger/:type', authenticateToken, triggerReminder);
 
 module.exports = router;
+

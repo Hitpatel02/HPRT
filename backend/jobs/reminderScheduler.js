@@ -5,13 +5,31 @@
  * pg-boss jobs. Called by settingsController whenever settings are saved.
  *
  * NOT the worker — this file only enqueues jobs; it runs inside the API server process.
+ *
+ * RULE: Always reschedule on every call.
+ *   Even if a job was already 'sent', we cancel + delete + re-create it.
+ *   This lets settings changes take effect immediately, including for testing.
+ *
+ * Two separate job types:
+ *   send-email-reminder    — handled by handleEmailReminderJob in the worker
+ *   send-whatsapp-reminder — handled by handleWhatsAppReminderJob in the worker
  */
 const { getBoss } = require('./boss');
 const { logger } = require('../utils/logger');
 const reminderJobQueries = require('../queries/reminderJobQueries');
 
-/** Name used for all reminder jobs in pg-boss */
-const JOB_NAME = 'send-reminder';
+/** Job name constants */
+const EMAIL_JOB_NAME = 'send-email-reminder';
+const WA_JOB_NAME = 'send-whatsapp-reminder';
+
+/** Keep JOB_NAME as a legacy alias so other files that import it don't break */
+const JOB_NAME = EMAIL_JOB_NAME;
+
+/** Channel → pg-boss job name mapping */
+const CHANNEL_JOB_NAME = {
+    email: EMAIL_JOB_NAME,
+    whatsapp: WA_JOB_NAME,
+};
 
 /**
  * Convert a DATE value and scheduler time into an exact Date object.
@@ -83,8 +101,16 @@ function buildReminderDate(reminderDate, schedulerHour, schedulerMinute, schedul
 
 /**
  * Schedule all four reminder jobs from a settings record.
- * Skips any reminder type that already has a non-failed, non-cancelled job.
- * Jobs in the past are skipped (cannot schedule backward in time).
+ *
+ * ALWAYS reschedules — even if a job was already 'sent'.
+ * This allows re-testing without touching the database manually.
+ *
+ * For each reminder type [gst_1, gst_2, tds_1, tds_2]:
+ *   - Builds the target datetime (IST → UTC)
+ *   - Skips if in the past
+ *   - For each enabled channel [email, whatsapp]:
+ *     - Cancels + deletes any existing row (any status)
+ *     - Creates a fresh pg-boss job and tracking row
  *
  * @param {Object} settings - Row from reminder_settings table
  */
@@ -106,6 +132,16 @@ async function scheduleRemindersFromSettings(settings) {
         { type: 'tds_2', dateField: settings.tds_reminder_2_date },
     ];
 
+    // Determine which channels are enabled
+    const enabledChannels = [];
+    if (settings.enable_email_reminders) enabledChannels.push('email');
+    if (settings.enable_whatsapp_reminders) enabledChannels.push('whatsapp');
+
+    if (enabledChannels.length === 0) {
+        logger.info('[reminderScheduler] Both email and WhatsApp are disabled — no jobs scheduled');
+        return;
+    }
+
     for (const { type, dateField } of reminderMap) {
         if (!dateField) {
             logger.debug(`[reminderScheduler] Skipping ${type} — no date set`);
@@ -119,8 +155,7 @@ async function scheduleRemindersFromSettings(settings) {
             continue;
         }
 
-        // Log IST time for human-readable audit alongside UTC
-        // istDisplay is also reused in the final ✅ success log below
+        // Human-readable IST display (also reused in success log)
         const istDisplay = new Date(scheduledFor.getTime() + 330 * 60 * 1000)
             .toISOString().replace('T', ' ').slice(0, 19);
         logger.info(`[reminderScheduler] ${type} target: ${istDisplay} IST → UTC: ${scheduledFor.toISOString()}`);
@@ -130,62 +165,60 @@ async function scheduleRemindersFromSettings(settings) {
             continue;
         }
 
-        // Idempotency: if a job exists for this settings+type, handle it based on status.
-        // • 'sent'            → already delivered successfully, skip entirely
-        // • 'pending'/'failed' → stale (possibly wrong date from old bug), cancel + delete so we re-schedule fresh
-        const existingJobs = await reminderJobQueries.getJobsBySettingsId(settings.id);
-        const existingJob = existingJobs.find(j => j.reminder_type === type);
+        // Process each enabled channel independently
+        for (const channel of enabledChannels) {
+            const jobName = CHANNEL_JOB_NAME[channel];
 
-        if (existingJob) {
-            if (existingJob.status === 'sent') {
-                logger.info(`[reminderScheduler] Skipping ${type} — already sent successfully`);
-                continue;
-            }
-            // Cancel the old pg-boss job if it has one
-            if (existingJob.boss_job_id) {
-                try {
-                    await boss.cancel(JOB_NAME, existingJob.boss_job_id);
-                } catch (e) {
-                    logger.warn(`[reminderScheduler] Could not cancel old boss job ${existingJob.boss_job_id}: ${e.message}`);
+            // ── Always reschedule: cancel + delete any existing row regardless of status ──
+            const existingRow = await reminderJobQueries.findJobByTypeAndChannel(settings.id, type, channel);
+
+            if (existingRow) {
+                if (existingRow.boss_job_id) {
+                    try {
+                        await boss.cancel(jobName, existingRow.boss_job_id);
+                    } catch (e) {
+                        logger.warn(`[reminderScheduler] Could not cancel old boss job ${existingRow.boss_job_id} (${channel}): ${e.message}`);
+                    }
                 }
+                await reminderJobQueries.deleteJobById(existingRow.id);
+                logger.info(`[reminderScheduler] Cancelled old ${type} [${channel}] job (status=${existingRow.status}) — rescheduling`);
             }
-            // Remove stale tracking row so we can insert a fresh one
-            await reminderJobQueries.deleteJobById(existingJob.id);
-            logger.info(`[reminderScheduler] Cancelled stale ${type} job (status=${existingJob.status}) — rescheduling fresh`);
-        }
 
-        // Payload carried by the job — the worker uses this to fetch and send
-        const payload = {
-            settingsId: settings.id,
-            reminderType: type,
-            scheduledFor: scheduledFor.toISOString(),
-        };
+            // Payload carried by the job
+            const payload = {
+                settingsId: settings.id,
+                reminderType: type,
+                channel,
+                scheduledFor: scheduledFor.toISOString(),
+            };
 
-        // Ensure queue exists before sending
-        await boss.createQueue(JOB_NAME);
+            // Ensure queue exists before sending
+            await boss.createQueue(jobName);
 
-        // Send to pg-boss. scheduledFor is always a Date object (required by pg-boss).
-        const bossJobId = await boss.send(JOB_NAME, payload, {
-            startAfter: scheduledFor,  // must be a Date object
-            retryLimit: 5,
-            retryDelay: 60,        // Start with 60 seconds
-            retryBackoff: true,    // Exponential: 60s, 120s, 240s, 480s, 960s
-            expireInHours: 24,     // Job expires after 24 hours if not picked up
-        });
+            // Send to pg-boss
+            const retryDelay = channel === 'whatsapp' ? 300 : 60; // WA: retry every 5 min; email: 60s
+            const bossJobId = await boss.send(jobName, payload, {
+                startAfter: scheduledFor,  // must be a Date object
+                retryLimit: 5,
+                retryDelay,
+                retryBackoff: channel === 'email', // exponential for email, fixed for WA
+                expireInHours: 24,
+            });
 
-        // Track in our own table
-        await reminderJobQueries.createJob({
-            settings_id: settings.id,
-            reminder_type: type,
-            scheduled_for: scheduledFor,
-            boss_job_id: bossJobId,
-        });
+            // Track in our own table
+            await reminderJobQueries.createJob({
+                settings_id: settings.id,
+                reminder_type: type,
+                scheduled_for: scheduledFor,
+                boss_job_id: bossJobId,
+                channel,
+            });
 
-        // istDisplay was already computed above for the audit log — reuse it here
-        if (!bossJobId) {
-            logger.error(`[reminderScheduler] pg-boss returned null for ${type} — job may already exist with same key or queue issue`);
-        } else {
-            logger.info(`[reminderScheduler] ✅ Scheduled ${type} | IST: ${istDisplay} | UTC: ${scheduledFor.toISOString()} | bossJobId: ${bossJobId}`);
+            if (!bossJobId) {
+                logger.error(`[reminderScheduler] pg-boss returned null for ${type} [${channel}] — possible queue issue`);
+            } else {
+                logger.info(`[reminderScheduler] ✅ Scheduled ${type} [${channel}] | IST: ${istDisplay} | UTC: ${scheduledFor.toISOString()} | bossJobId: ${bossJobId}`);
+            }
         }
     }
 }
@@ -200,18 +233,19 @@ async function cancelRemindersForSettings(settingsId) {
     const jobs = await reminderJobQueries.getJobsBySettingsId(settingsId);
     const boss = await getBoss();
 
-    let cancelled = 0;
     for (const job of jobs) {
         if (job.boss_job_id && ['pending', 'processing'].includes(job.status)) {
+            // Use the correct job name based on channel
+            const jobName = CHANNEL_JOB_NAME[job.channel] || EMAIL_JOB_NAME;
             try {
-                await boss.cancel(JOB_NAME, job.boss_job_id);
+                await boss.cancel(jobName, job.boss_job_id);
             } catch (err) {
                 logger.warn(`[reminderScheduler] Could not cancel pg-boss job ${job.boss_job_id}: ${err.message}`);
             }
         }
     }
 
-    cancelled = await reminderJobQueries.cancelJobsBySettingsId(settingsId);
+    const cancelled = await reminderJobQueries.cancelJobsBySettingsId(settingsId);
     logger.info(`[reminderScheduler] Cancelled ${cancelled} reminder jobs for settingsId=${settingsId}`);
 }
 
@@ -224,16 +258,19 @@ async function cancelRemindersForSettings(settingsId) {
 async function triggerImmediately(reminderType, payload = {}) {
     const boss = await getBoss();
 
-    // Ensure queue exists before sending
-    await boss.createQueue(JOB_NAME);
+    // For manual triggers, use the email job queue as a generic fallback
+    const jobName = reminderType === 'whatsapp' ? WA_JOB_NAME : EMAIL_JOB_NAME;
 
-    const jobId = await boss.send(JOB_NAME, { reminderType, ...payload, immediate: true }, {
+    // Ensure queue exists before sending
+    await boss.createQueue(jobName);
+
+    const jobId = await boss.send(jobName, { reminderType, ...payload, immediate: true }, {
         startAfter: new Date(),
         retryLimit: 3,
         retryDelay: 30,
         retryBackoff: true,
     });
-    logger.info(`[reminderScheduler] Triggered immediate job: type=${reminderType}, bossJobId=${jobId}`);
+    logger.info(`[reminderScheduler] Triggered immediate job: type=${reminderType}, jobName=${jobName}, bossJobId=${jobId}`);
     return jobId;
 }
 
@@ -242,4 +279,6 @@ module.exports = {
     cancelRemindersForSettings,
     triggerImmediately,
     JOB_NAME,
+    EMAIL_JOB_NAME,
+    WA_JOB_NAME,
 };

@@ -221,18 +221,9 @@ exports.updateReminderSettings = async (req, res, next) => {
 
         const result = await settingsQueries.updateReminderSettings(id, updates);
 
-        // If any date or scheduler field changed, reschedule pg-boss jobs
-        const hasSchedulerChange = updates.scheduler_hour !== undefined ||
-            updates.scheduler_minute !== undefined ||
-            updates.scheduler_am_pm !== undefined ||
-            updates.gst_reminder_1_date !== undefined ||
-            updates.gst_reminder_2_date !== undefined ||
-            updates.tds_reminder_1_date !== undefined ||
-            updates.tds_reminder_2_date !== undefined;
-
-        if (hasSchedulerChange) {
-            await scheduleRemindersFromSettings(result);
-        }
+        // Always reschedule pg-boss jobs on any update — this resets even 'sent' jobs
+        // so that re-saving settings during testing works without manual DB changes
+        await scheduleRemindersFromSettings(result);
 
         res.json({ success: true, message: 'Settings updated successfully', settings: result });
     } catch (error) {
@@ -297,6 +288,10 @@ exports.updateNotificationSettings = async (req, res, next) => {
             if (enable_whatsapp_reminders !== undefined) updates.enable_whatsapp_reminders = enable_whatsapp_reminders;
             if (enable_email_reminders !== undefined) updates.enable_email_reminders = enable_email_reminders;
             await settingsQueries.updateReminderSettings(settings.id, updates);
+
+            // Reschedule so toggling a channel creates/removes its jobs immediately
+            const updatedSettings = await settingsQueries.getReminderSettingsById(settings.id);
+            if (updatedSettings) await scheduleRemindersFromSettings(updatedSettings);
         }
 
         res.json({ success: true, message: 'Notification settings updated successfully' });

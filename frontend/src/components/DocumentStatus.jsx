@@ -1,10 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Alert, Spinner, Card, Form, Button, Badge } from 'react-bootstrap';
+import { Container, Table, Alert, Badge, Card, Form } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { selectToken } from '../redux/authSlice';
 import { documentsAPI } from '../api';
 import { getPreviousMonthFormatted } from '../utils/dateUtils';
 import PageLoader from './common/PageLoader';
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Format a timestamptz value as "08 Mar 2026 08:14" or return null */
+function formatSentDate(dateVal) {
+  if (!dateVal) return null;
+  try {
+    return new Date(dateVal).toLocaleString('en-GB', {
+      day:    '2-digit',
+      month:  'short',
+      year:   'numeric',
+      hour:   '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Reminder cell: green badge with timestamp if sent, grey "Not sent" otherwise */
+function ReminderCell({ sent, sentDate }) {
+  if (sent) {
+    return (
+      <Badge bg="success" style={{ fontSize: '0.75rem', whiteSpace: 'normal', textAlign: 'left' }}>
+        ✓ {formatSentDate(sentDate) || 'Sent'}
+      </Badge>
+    );
+  }
+  return <Badge bg="secondary" style={{ fontSize: '0.73rem' }}>Not sent</Badge>;
+}
+
+/** Document received / pending / N/A badge */
+function DocStatusBadge({ isReceived, isEnabled }) {
+  if (!isEnabled) return <Badge bg="secondary">N/A</Badge>;
+  return isReceived
+    ? <Badge bg="success">Received</Badge>
+    : <Badge bg="warning" text="dark">Pending</Badge>;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 const DocumentStatus = () => {
   const token = useSelector(selectToken);
@@ -23,27 +64,19 @@ const DocumentStatus = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Fetch all documents with pending status using the API service
+
       const data = await documentsAPI.getPending(token);
       setPendingDocuments(data);
-      
-      // Extract unique months for filtering
+
       const uniqueMonths = [...new Set(data.map(doc => doc.document_month))];
       setMonths(uniqueMonths);
-      
-      // Get the previous month in the expected format
+
       const previousMonth = getPreviousMonthFormatted();
-      
-      // Set the filter to the previous month if it exists in our data
       if (uniqueMonths.includes(previousMonth)) {
         setFilterMonth(previousMonth);
       } else if (uniqueMonths.length > 0) {
-        // If previous month doesn't exist, use the most recent month
-        const sortedMonths = [...uniqueMonths].sort().reverse();
-        setFilterMonth(sortedMonths[0]);
+        setFilterMonth([...uniqueMonths].sort().reverse()[0]);
       }
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,40 +84,23 @@ const DocumentStatus = () => {
     }
   };
 
-  // Filter documents based on selected month
-  const filteredDocuments = filterMonth 
+  const filteredDocuments = filterMonth
     ? pendingDocuments.filter(doc => doc.document_month === filterMonth)
     : pendingDocuments;
-
-  // Function to display document status
-  const renderStatus = (isReceived, isEnabled) => {
-    if (!isEnabled) {
-      return <Badge bg="secondary">Not applicable</Badge>;
-    }
-    
-    return isReceived ? (
-      <Badge bg="success">Received</Badge>
-    ) : (
-      <Badge bg="warning" text="dark">Pending</Badge>
-    );
-  };
 
   return (
     <Container fluid className="px-4">
       <h1 className="mb-4">Document Status</h1>
-      
+
       {error && <Alert variant="danger">{error}</Alert>}
-      
+
       <Card className="mb-4">
         <Card.Body>
           <Card.Title>Filter Documents</Card.Title>
           <Form>
             <Form.Group>
               <Form.Label>Select Month</Form.Label>
-              <Form.Select 
-                value={filterMonth} 
-                onChange={(e) => setFilterMonth(e.target.value)}
-              >
+              <Form.Select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
                 <option value="">All Months</option>
                 {months.map(month => (
                   <option key={month} value={month}>{month}</option>
@@ -94,7 +110,7 @@ const DocumentStatus = () => {
           </Form>
         </Card.Body>
       </Card>
-      
+
       {loading ? (
         <PageLoader message="Loading document status..." />
       ) : (
@@ -102,7 +118,8 @@ const DocumentStatus = () => {
           <h3>Pending Documents</h3>
           {filteredDocuments.length === 0 ? (
             <Alert variant="warning">
-              No pending documents found for {filterMonth || "the selected month"}. Please select a different month.
+              No pending documents found for {filterMonth || 'the selected month'}.
+              Please select a different month.
             </Alert>
           ) : (
             <Table striped bordered hover responsive>
@@ -112,8 +129,12 @@ const DocumentStatus = () => {
                   <th>Month</th>
                   <th>GST 1</th>
                   <th>Bank Statement</th>
-                  <th>TDS Statement</th>
-                  <th>Last Reminder</th>
+                  <th>TDS</th>
+                  {/* Reminder sent columns */}
+                  <th title="GST Reminder 1 sent timestamp">GST R1 Sent</th>
+                  <th title="GST Reminder 2 sent timestamp">GST R2 Sent</th>
+                  <th title="TDS Reminder 1 sent timestamp">TDS R1 Sent</th>
+                  <th title="TDS Reminder 2 sent timestamp">TDS R2 Sent</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,28 +142,14 @@ const DocumentStatus = () => {
                   <tr key={doc.id}>
                     <td>{doc.client_name}</td>
                     <td>{doc.document_month}</td>
-                    <td>
-                      {renderStatus(doc.gst_1_received, doc.gst_1_enabled)}
-                    </td>
-                    <td>
-                      {renderStatus(doc.bank_statement_received, doc.bank_statement_enabled)}
-                    </td>
-                    <td>
-                      {renderStatus(doc.tds_received, doc.tds_document_enabled)}
-                    </td>
-                    <td>
-                      {doc.last_reminder_date ? 
-                        new Date(doc.last_reminder_date).toLocaleString('en-GB', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: true
-                        }).replace(/\//g, '-') : 
-                        "No reminders sent"}
-                    </td>
+                    <td><DocStatusBadge isReceived={doc.gst_1_received}           isEnabled={doc.gst_1_enabled} /></td>
+                    <td><DocStatusBadge isReceived={doc.bank_statement_received}   isEnabled={doc.bank_statement_enabled} /></td>
+                    <td><DocStatusBadge isReceived={doc.tds_received}              isEnabled={doc.tds_document_enabled} /></td>
+                    {/* Reminder timestamps */}
+                    <td><ReminderCell sent={doc.gst_1_reminder_1_sent} sentDate={doc.gst_1_reminder_1_sent_date} /></td>
+                    <td><ReminderCell sent={doc.gst_1_reminder_2_sent} sentDate={doc.gst_1_reminder_2_sent_date} /></td>
+                    <td><ReminderCell sent={doc.tds_reminder_1_sent}   sentDate={doc.tds_reminder_1_sent_date} /></td>
+                    <td><ReminderCell sent={doc.tds_reminder_2_sent}   sentDate={doc.tds_reminder_2_sent_date} /></td>
                   </tr>
                 ))}
               </tbody>

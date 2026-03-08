@@ -30,8 +30,10 @@ async function updateReminderStatus(reminderData) {
     'bank_reminder_2': { sent: 'bank_reminder_2_sent', date: 'bank_reminder_2_sent_date' },
   };
 
-  // column_prefix already ends with '_', e.g. 'gst_1_reminder_' → strip trailing '_'
-  const key = `${column_prefix.replace(/_$/, '')}${reminder_number}`;
+  // column_prefix examples: 'gst_1_reminder_', 'tds_reminder_', 'bank_reminder_'
+  // Strip trailing '_' then rejoin with '_' before the number to get the correct key.
+  // e.g. 'gst_1_reminder_' + strip + '_' + 1  →  'gst_1_reminder_1'
+  const key = `${column_prefix.replace(/_$/, '')}_${reminder_number}`;
   const cols = COLUMN_MAP[key];
   if (!cols) {
     throw new Error(`[clientDocumentsQueries] Invalid reminder column key: ${key}`);

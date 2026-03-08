@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middlewares/auth');
 const router = express.Router();
 const {
     generateReport,
@@ -37,3 +37,4 @@ router.get('/download', authenticateToken, downloadReport);
 router.get('/download-csv', authenticateToken, downloadReportCSV);
 
 module.exports = router;
+

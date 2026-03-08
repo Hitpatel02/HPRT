@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middlewares/auth');
 const { getPendingDocuments } = require('../controllers/pendingDocumentController');
 const router = express.Router();
 

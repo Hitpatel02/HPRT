@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middlewares/auth');
 const router = express.Router();
 const {
     login,
@@ -61,3 +61,4 @@ router.put('/change-password', authenticateToken, changePassword);
 router.get('/verify', authenticateToken, verifyToken);
 
 module.exports = router;
+

@@ -297,8 +297,13 @@ async function getAllDocuments() {
  */
 async function getPendingDocuments() {
   const result = await db.query(
-    `SELECT cd.*, c.name as client_name, c.email_id_1, c.gst_filing_type,
-            c.gst_1_enabled, c.bank_statement_enabled, c.tds_document_enabled
+    `SELECT cd.*,
+            c.name as client_name, c.email_id_1, c.gst_filing_type,
+            c.gst_1_enabled, c.bank_statement_enabled, c.tds_document_enabled,
+            cd.gst_1_reminder_1_sent,      cd.gst_1_reminder_1_sent_date,
+            cd.gst_1_reminder_2_sent,      cd.gst_1_reminder_2_sent_date,
+            cd.tds_reminder_1_sent,        cd.tds_reminder_1_sent_date,
+            cd.tds_reminder_2_sent,        cd.tds_reminder_2_sent_date
      FROM "user".client_documents cd
      JOIN "user".clients c ON cd.client_id = c.id
      WHERE (c.gst_1_enabled = true AND cd.gst_1_received = false) OR

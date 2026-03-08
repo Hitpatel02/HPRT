@@ -1,5 +1,5 @@
 const express = require("express");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken } = require("../middlewares/auth");
 const { 
     getGroups, 
     getGroupById, 
@@ -37,3 +37,4 @@ router.patch("/:id", authenticateToken, updateGroup);
 router.post("/reset", authenticateToken, resetGroups);
 
 module.exports = router;
+

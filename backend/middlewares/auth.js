@@ -6,7 +6,6 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 /**
  * Middleware to verify and authenticate JWT tokens
- * Based on the LearningManagementSystem implementation
  */
 function authenticateToken(req, res, next) {
     try {
@@ -36,4 +35,4 @@ function authenticateToken(req, res, next) {
     }
 }
 
-module.exports = { authenticateToken }; 
+module.exports = { authenticateToken };
