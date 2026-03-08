@@ -5,6 +5,7 @@ import { selectToken } from '../redux/authSlice';
 import { documentsAPI } from '../api';
 import CommunicationDateInput, { DatePickerProvider } from './common/CommunicationDateInput';
 import { getTodayDate, getPreviousMonthFormatted } from '../utils/dateUtils';
+import PageLoader from './common/PageLoader';
 
 const SubmissionPage = () => {
   const token = useSelector(selectToken);
@@ -151,12 +152,7 @@ const SubmissionPage = () => {
       </Card>
       
       {loading ? (
-        <div className="text-center my-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-          <p className="mt-2">Loading documents...</p>
-        </div>
+        <PageLoader message="Loading documents..." />
       ) : (
         <>
           {filteredDocuments.length === 0 ? (

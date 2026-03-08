@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { Button, Badge, Modal } from 'react-bootstrap';
+import { Button, Badge, Modal, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { connectWhatsApp, disconnectWhatsApp, deleteWhatsAppSession } from '../api/services/whatsappService';
 import '../css/WhatsAppControls.css';
 
 const STATE_LABELS = {
     DISCONNECTED: { label: 'Disconnected', variant: 'danger' },
     INITIALIZING: { label: 'Connecting...', variant: 'warning' },
-    CONNECTED:    { label: 'Connected',    variant: 'success' },
+    CONNECTED:    { label: 'Connected',     variant: 'success' },
 };
 
 /**
  * WhatsAppControls — Status badge + connect/disconnect/delete buttons.
  *
- * @param {string}   state         - 'DISCONNECTED' | 'INITIALIZING' | 'CONNECTED'
- * @param {Function} onAction      - called after any successful action
- * @param {Object}   info          - WA client info { wid, pushname, platform }
+ * @param {string}   state           - 'DISCONNECTED' | 'INITIALIZING' | 'CONNECTED'
+ * @param {boolean}  sessionExists   - Whether a saved session file exists
+ * @param {Function} onAction        - Called after any successful action
+ * @param {Function} onSessionDeleted - Called specifically after session delete (to update sessionExists)
+ * @param {Object}   info            - WA client info { wid, pushname, platform }
  */
-export default function WhatsAppControls({ state, onAction, info }) {
+export default function WhatsAppControls({ state, sessionExists, onAction, onSessionDeleted, info }) {
     const [loading, setLoading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [feedback, setFeedback] = useState(null);
@@ -41,8 +43,33 @@ export default function WhatsAppControls({ state, onAction, info }) {
     const handleDisconnect = () => doAction(disconnectWhatsApp, 'Disconnect');
     const handleDeleteConfirmed = async () => {
         setShowDeleteConfirm(false);
-        await doAction(deleteWhatsAppSession, 'Delete Session');
+        setLoading(true);
+        setFeedback(null);
+        try {
+            const res = await deleteWhatsAppSession();
+            setFeedback({ type: 'success', text: res.message || 'Session deleted' });
+            if (onSessionDeleted) onSessionDeleted();
+            else if (onAction) onAction();
+        } catch (err) {
+            setFeedback({ type: 'danger', text: err?.response?.data?.message || err.message || 'Delete failed' });
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const deleteDisabled = loading || state === 'INITIALIZING' || !sessionExists;
+
+    const DeleteButton = (
+        <Button
+            variant="danger"
+            disabled={deleteDisabled}
+            onClick={() => setShowDeleteConfirm(true)}
+            className="wa-btn"
+            style={deleteDisabled && !loading && state !== 'INITIALIZING' ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
+        >
+            🗑 Delete Session
+        </Button>
+    );
 
     return (
         <div className="wa-controls">
@@ -84,14 +111,16 @@ export default function WhatsAppControls({ state, onAction, info }) {
                     {loading ? '...' : '⏹ Disconnect'}
                 </Button>
 
-                <Button
-                    variant="danger"
-                    disabled={loading || state === 'INITIALIZING'}
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="wa-btn"
-                >
-                    🗑 Delete Session
-                </Button>
+                {!sessionExists && state !== 'INITIALIZING' ? (
+                    <OverlayTrigger
+                        placement="top"
+                        overlay={<Tooltip>No saved session to delete</Tooltip>}
+                    >
+                        <span style={{ display: 'inline-block' }}>
+                            {DeleteButton}
+                        </span>
+                    </OverlayTrigger>
+                ) : DeleteButton}
             </div>
 
             {/* Delete confirmation modal */}

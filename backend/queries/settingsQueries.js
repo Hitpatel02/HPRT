@@ -20,7 +20,7 @@ async function getLatestReminderSettings() {
      FROM "user".reminder_settings 
      ORDER BY updated_at DESC LIMIT 1`
   );
-  
+
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
@@ -46,7 +46,7 @@ async function getReminderSettingsById(id) {
      WHERE id = $1`,
     [id]
   );
-  
+
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
@@ -63,7 +63,7 @@ async function getAvailableMonths() {
      WHERE today_date IS NOT NULL
      ORDER BY year DESC, month DESC`
   );
-  
+
   return result.rows;
 }
 
@@ -90,7 +90,7 @@ async function getSettingsForMonth(monthYearString) {
      ORDER BY id DESC LIMIT 1`,
     [monthYearString]
   );
-  
+
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
@@ -102,7 +102,7 @@ async function getSettingsForMonth(monthYearString) {
 async function createReminderSettings(settings) {
   const {
     current_month,
-    today_date, 
+    today_date,
     gst_due_date,
     gst_reminder_1_date,
     gst_reminder_2_date,
@@ -116,12 +116,12 @@ async function createReminderSettings(settings) {
     enable_whatsapp_reminders,
     enable_email_reminders
   } = settings;
-  
+
   // Handle empty dates by converting them to null
   const handleEmptyDate = (date) => {
     return date === '' ? null : date;
   };
-  
+
   const result = await db.query(
     `INSERT INTO "user".reminder_settings (
         current_month, 
@@ -157,7 +157,7 @@ async function createReminderSettings(settings) {
       enable_email_reminders !== undefined ? enable_email_reminders : true
     ]
   );
-  
+
   return result.rows[0];
 }
 
@@ -169,10 +169,10 @@ async function createReminderSettings(settings) {
  */
 async function updateReminderSettings(id, updates) {
   const validFields = [
-    'current_month', 
-    'today_date', 
-    'gst_due_date', 
-    'gst_reminder_1_date', 
+    'current_month',
+    'today_date',
+    'gst_due_date',
+    'gst_reminder_1_date',
     'gst_reminder_2_date',
     'tds_due_date',
     'tds_reminder_1_date',
@@ -184,43 +184,43 @@ async function updateReminderSettings(id, updates) {
     'enable_whatsapp_reminders',
     'enable_email_reminders'
   ];
-  
+
   const updateFields = [];
   const values = [];
-  
+
   let index = 1;
-  
+
   // Handle empty dates by converting them to null
   const handleEmptyDate = (date) => {
     return date === '' ? null : date;
   };
-  
+
   Object.keys(updates).forEach(key => {
     if (validFields.includes(key)) {
       updateFields.push(`${key} = $${index}`);
-      
+
       // Handle date fields
       if (key.includes('date')) {
         values.push(handleEmptyDate(updates[key]));
       } else {
         values.push(updates[key]);
       }
-      
+
       index++;
     }
   });
-  
+
   if (updateFields.length === 0) {
     throw new Error('No valid updates provided');
   }
-  
+
   values.push(id); // Add id as the last parameter
-  
+
   const query = `UPDATE "user".reminder_settings 
                  SET ${updateFields.join(', ')}, updated_at = NOW() 
                  WHERE id = $${index}
                  RETURNING *`;
-  
+
   const result = await db.query(query, values);
   return result.rows[0];
 }
@@ -237,7 +237,7 @@ async function deleteReminderSettings(id) {
      RETURNING id`,
     [id]
   );
-  
+
   return result.rows.length > 0;
 }
 
@@ -254,7 +254,7 @@ async function resetReminderDates(id) {
          tds_reminder_1_date = NULL, 
          tds_reminder_2_date = NULL
      WHERE id = $1`,
-     [id]
+    [id]
   );
 }
 
@@ -265,7 +265,30 @@ async function resetReminderDates(id) {
  */
 async function getClientsForReminder(options) {
   const { documentField, reminderField, documentMonth } = options;
-  
+
+  // Whitelist of allowed column names — prevents column-name injection
+  const ALLOWED_DOCUMENT_FIELDS = [
+    'gst_1_received',
+    'bank_statement_received',
+    'tds_received',
+  ];
+  const ALLOWED_REMINDER_FIELDS = [
+    'gst_1_reminder_1_sent',
+    'gst_1_reminder_2_sent',
+    'tds_reminder_1_sent',
+    'tds_reminder_2_sent',
+    'bank_reminder_1_sent',
+    'bank_reminder_2_sent',
+  ];
+
+  if (!ALLOWED_DOCUMENT_FIELDS.includes(documentField)) {
+    throw new Error(`[settingsQueries] Invalid documentField: ${documentField}`);
+  }
+  if (!ALLOWED_REMINDER_FIELDS.includes(reminderField)) {
+    throw new Error(`[settingsQueries] Invalid reminderField: ${reminderField}`);
+  }
+
+  // documentField and reminderField are now guaranteed to be safe hardcoded identifiers
   const result = await db.query(
     `SELECT c.id, c.name, c.email_id_1, c.email_id_2, c.email_id_3,
             cd.id as document_id
@@ -276,7 +299,7 @@ async function getClientsForReminder(options) {
      AND cd.${reminderField} = false`,
     [documentMonth]
   );
-  
+
   return result.rows;
 }
 
@@ -288,9 +311,32 @@ async function getClientsForReminder(options) {
  * @returns {Promise<void>}
  */
 async function markReminderSent(documentId, reminderField, reminderDateField) {
+  // Map of safe (reminderField → reminderDateField) pairs to a hardcoded SQL snippet.
+  // Column names are never interpolated from external input — only from this map.
+  const COLUMN_QUERIES = {
+    'gst_1_reminder_1_sent|gst_1_reminder_1_sent_date':
+      'SET gst_1_reminder_1_sent = true, gst_1_reminder_1_sent_date = NOW()',
+    'gst_1_reminder_2_sent|gst_1_reminder_2_sent_date':
+      'SET gst_1_reminder_2_sent = true, gst_1_reminder_2_sent_date = NOW()',
+    'tds_reminder_1_sent|tds_reminder_1_sent_date':
+      'SET tds_reminder_1_sent = true, tds_reminder_1_sent_date = NOW()',
+    'tds_reminder_2_sent|tds_reminder_2_sent_date':
+      'SET tds_reminder_2_sent = true, tds_reminder_2_sent_date = NOW()',
+    'bank_reminder_1_sent|bank_reminder_1_sent_date':
+      'SET bank_reminder_1_sent = true, bank_reminder_1_sent_date = NOW()',
+    'bank_reminder_2_sent|bank_reminder_2_sent_date':
+      'SET bank_reminder_2_sent = true, bank_reminder_2_sent_date = NOW()',
+  };
+
+  const key = `${reminderField}|${reminderDateField}`;
+  const setClause = COLUMN_QUERIES[key];
+  if (!setClause) {
+    throw new Error(`[settingsQueries] Invalid reminder field combination: ${key}`);
+  }
+
   await db.query(
     `UPDATE "user".client_documents
-     SET ${reminderField} = true, ${reminderDateField} = NOW()
+     ${setClause}
      WHERE id = $1`,
     [documentId]
   );

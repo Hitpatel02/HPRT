@@ -77,7 +77,7 @@ const ReminderToggles = ({ settings, onSettingsUpdated }) => {
 
         
         // For a new record, we need to use the month-specific endpoint
-        await settingsAPI.saveMonthSettings(token, year, month, {
+        await settingsAPI.saveSettingsForMonth(token, year, month, {
           enable_whatsapp_reminders: reminderSettings.enable_whatsapp_reminders,
           enable_email_reminders: reminderSettings.enable_email_reminders,
           today_date: new Date().toISOString().split('T')[0], // Add today's date since it's required

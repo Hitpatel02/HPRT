@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Table, Button, Modal, Form, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { selectToken, setInitialDataLoaded } from '../redux/authSlice';
-import LoadingSpinner from './common/LoadingSpinner';
+import PageLoader from './common/PageLoader';
 import { clientsAPI, documentsAPI } from '../api';
 
 const ClientList = () => {
@@ -58,6 +58,22 @@ const ClientList = () => {
     
     fetchClients();
   }, [token]);
+
+  // Fix: Bootstrap Modal leaves body overflow:hidden when navigating away via SPA routing.
+  // Clean it up whenever this component mounts (i.e. when user navigates back) and on unmount.
+  useEffect(() => {
+    const restoreBodyScroll = () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      document.body.classList.remove('modal-open');
+      // Remove any lingering modal-backdrop divs
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    };
+    // Run on mount (returning from client documents page)
+    restoreBodyScroll();
+    // Run on unmount (leaving this page)
+    return restoreBodyScroll;
+  }, []);
 
   const fetchClients = async () => {
     try {
@@ -244,7 +260,7 @@ const ClientList = () => {
   if (loading) {
     return (
       <div className="container-fluid px-4">
-        <LoadingSpinner message="Loading clients..." />
+        <PageLoader message="Loading clients..." />
       </div>
     );
   }
@@ -339,7 +355,7 @@ const ClientList = () => {
         <Modal.Header closeButton={!isCreating}>
           <Modal.Title>Add New Client</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="overflow-auto" style={{ maxHeight: '110vh' }}>
+        <Modal.Body>
           {validationError && <Alert variant="danger">{validationError}</Alert>}
           <Form onSubmit={handleAddClient}>
             <Form.Group className="mb-3">

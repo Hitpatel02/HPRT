@@ -25,16 +25,60 @@ const JOB_NAME = 'send-reminder';
 function buildReminderDate(reminderDate, schedulerHour, schedulerMinute, schedulerAmPm) {
     if (!reminderDate) return null;
 
-    const date = new Date(reminderDate);
-    if (isNaN(date.getTime())) return null;
+    // Parse date string directly to avoid timezone shifts.
+    // PostgreSQL DATE columns arrive as either a plain string "2026-03-08"
+    // or as a JS Date object set to UTC midnight-ish (e.g. 2026-03-07T18:30:00.000Z
+    // for IST midnight). Using .getUTCDate() on the latter gives the wrong day.
+    // Solution: convert any Date object to an IST wall-clock date string first.
+    let dateStr;
+    if (reminderDate instanceof Date) {
+        if (isNaN(reminderDate.getTime())) return null;
+        // Shift to IST (+5:30) to read the correct calendar date
+        const istOffset = (5 * 60 + 30) * 60 * 1000;
+        const istDate = new Date(reminderDate.getTime() + istOffset);
+        dateStr = istDate.toISOString().slice(0, 10); // "YYYY-MM-DD" in IST
+    } else {
+        // Accept "2026-03-08" or "2026-03-08T18:30:00.000Z" — take first 10 chars
+        dateStr = String(reminderDate).slice(0, 10);
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    if (!year || !month || !day) return null;
 
     // Convert 12h → 24h
-    let hour24 = schedulerHour;
-    if (schedulerAmPm === 'PM' && schedulerHour !== 12) hour24 = schedulerHour + 12;
-    if (schedulerAmPm === 'AM' && schedulerHour === 12) hour24 = 0;
+    let hour24 = Number(schedulerHour);
+    if (schedulerAmPm === 'PM' && hour24 !== 12) hour24 += 12;
+    if (schedulerAmPm === 'AM' && hour24 === 12) hour24 = 0;
 
-    date.setHours(hour24, schedulerMinute || 0, 0, 0);
-    return date;
+    const minute = Number(schedulerMinute) || 0;
+
+    // User enters time in IST (UTC+5:30); subtract 330 min to convert to UTC.
+    // Handle negative result → means the UTC time falls on the previous calendar day.
+    const istOffsetMinutes = 330;
+    const totalISTMinutes = hour24 * 60 + minute;
+    let utcTotalMinutes = totalISTMinutes - istOffsetMinutes;
+
+    let utcYear = year;
+    let utcMonth = month - 1; // JS months are 0-indexed
+    let utcDay = day;
+
+    let utcHour = Math.floor(utcTotalMinutes / 60);
+    let utcMinute = utcTotalMinutes % 60;
+    if (utcMinute < 0) { utcMinute += 60; utcHour -= 1; }
+
+    if (utcHour < 0) {
+        // Roll back one calendar day
+        const tempDate = new Date(Date.UTC(year, month - 1, day));
+        tempDate.setUTCDate(tempDate.getUTCDate() - 1);
+        utcYear = tempDate.getUTCFullYear();
+        utcMonth = tempDate.getUTCMonth();
+        utcDay = tempDate.getUTCDate();
+        utcHour += 24;
+    }
+
+    const result = new Date(Date.UTC(utcYear, utcMonth, utcDay, utcHour, utcMinute, 0, 0));
+    if (isNaN(result.getTime())) return null;
+    return result;
 }
 
 /**
@@ -75,16 +119,39 @@ async function scheduleRemindersFromSettings(settings) {
             continue;
         }
 
+        // Log IST time for human-readable audit alongside UTC
+        // istDisplay is also reused in the final ✅ success log below
+        const istDisplay = new Date(scheduledFor.getTime() + 330 * 60 * 1000)
+            .toISOString().replace('T', ' ').slice(0, 19);
+        logger.info(`[reminderScheduler] ${type} target: ${istDisplay} IST → UTC: ${scheduledFor.toISOString()}`);
+
         if (scheduledFor <= now) {
             logger.info(`[reminderScheduler] Skipping ${type} — scheduled time ${scheduledFor.toISOString()} is in the past`);
             continue;
         }
 
-        // Idempotency: don't enqueue if a valid job already exists for this settings+type
-        const alreadyExists = await reminderJobQueries.jobExistsForType(settings.id, type);
-        if (alreadyExists) {
-            logger.info(`[reminderScheduler] Skipping ${type} — job already scheduled for settingsId=${settings.id}`);
-            continue;
+        // Idempotency: if a job exists for this settings+type, handle it based on status.
+        // • 'sent'            → already delivered successfully, skip entirely
+        // • 'pending'/'failed' → stale (possibly wrong date from old bug), cancel + delete so we re-schedule fresh
+        const existingJobs = await reminderJobQueries.getJobsBySettingsId(settings.id);
+        const existingJob = existingJobs.find(j => j.reminder_type === type);
+
+        if (existingJob) {
+            if (existingJob.status === 'sent') {
+                logger.info(`[reminderScheduler] Skipping ${type} — already sent successfully`);
+                continue;
+            }
+            // Cancel the old pg-boss job if it has one
+            if (existingJob.boss_job_id) {
+                try {
+                    await boss.cancel(JOB_NAME, existingJob.boss_job_id);
+                } catch (e) {
+                    logger.warn(`[reminderScheduler] Could not cancel old boss job ${existingJob.boss_job_id}: ${e.message}`);
+                }
+            }
+            // Remove stale tracking row so we can insert a fresh one
+            await reminderJobQueries.deleteJobById(existingJob.id);
+            logger.info(`[reminderScheduler] Cancelled stale ${type} job (status=${existingJob.status}) — rescheduling fresh`);
         }
 
         // Payload carried by the job — the worker uses this to fetch and send
@@ -94,9 +161,12 @@ async function scheduleRemindersFromSettings(settings) {
             scheduledFor: scheduledFor.toISOString(),
         };
 
-        // Send to pg-boss with retry config
+        // Ensure queue exists before sending
+        await boss.createQueue(JOB_NAME);
+
+        // Send to pg-boss. scheduledFor is always a Date object (required by pg-boss).
         const bossJobId = await boss.send(JOB_NAME, payload, {
-            startAfter: scheduledFor,
+            startAfter: scheduledFor,  // must be a Date object
             retryLimit: 5,
             retryDelay: 60,        // Start with 60 seconds
             retryBackoff: true,    // Exponential: 60s, 120s, 240s, 480s, 960s
@@ -111,7 +181,12 @@ async function scheduleRemindersFromSettings(settings) {
             boss_job_id: bossJobId,
         });
 
-        logger.info(`[reminderScheduler] Scheduled ${type} reminder for ${scheduledFor.toISOString()} (boss job: ${bossJobId})`);
+        // istDisplay was already computed above for the audit log — reuse it here
+        if (!bossJobId) {
+            logger.error(`[reminderScheduler] pg-boss returned null for ${type} — job may already exist with same key or queue issue`);
+        } else {
+            logger.info(`[reminderScheduler] ✅ Scheduled ${type} | IST: ${istDisplay} | UTC: ${scheduledFor.toISOString()} | bossJobId: ${bossJobId}`);
+        }
     }
 }
 
@@ -148,6 +223,10 @@ async function cancelRemindersForSettings(settingsId) {
  */
 async function triggerImmediately(reminderType, payload = {}) {
     const boss = await getBoss();
+
+    // Ensure queue exists before sending
+    await boss.createQueue(JOB_NAME);
+
     const jobId = await boss.send(JOB_NAME, { reminderType, ...payload, immediate: true }, {
         startAfter: new Date(),
         retryLimit: 3,

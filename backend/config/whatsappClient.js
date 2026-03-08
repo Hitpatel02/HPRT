@@ -13,9 +13,12 @@ const path = require('path');
 const fs = require('fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { logger } = require('../utils/logger');
+const { validateGroupId } = require('../utils/whatsappUtils');
 
-// ── Session path (inside backend, controlled) ─────────────────────────
-const SESSION_PATH = path.resolve(__dirname, '../whatsapp-session');
+const os = require('os');
+
+// ── Session path (moved outside project to avoid OneDrive file locking) ──
+const SESSION_PATH = path.join(os.homedir(), '.hprt-whatsapp-session');
 
 // ── Client state ──────────────────────────────────────────────────────
 const STATE = {
@@ -66,7 +69,6 @@ function createClient() {
                 '--disable-features=site-per-process',
                 '--ignore-certificate-errors',
             ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
             timeout: 60000,
         },
         restartOnAuthFail: false,
@@ -76,7 +78,8 @@ function createClient() {
 
 // ── Attach event listeners to a client ───────────────────────────────
 function attachListeners(client) {
-    client.removeAllListeners(); // Prevent accumulation on re-init
+    // Prevent duplicate listeners if attachListeners is called multiple times
+    client.removeAllListeners();
 
     client.on('qr', (qr) => {
         logger.info('[whatsappClient] QR code generated — emitting to frontend');
@@ -124,6 +127,27 @@ function attachListeners(client) {
 
     client.on('change_state', (state) => {
         logger.debug(`[whatsappClient] State changed: ${state}`);
+    });
+
+    // ── !groupid command — always active in group chats ─────────────────────
+    client.on('message', async (message) => {
+        try {
+            const body = (message.body || '').trim().toLowerCase();
+            if (body !== '!groupid') return;
+
+            const chat = await message.getChat();
+            if (!chat.isGroup) return;
+
+            const groupId = message.from;
+            logger.info(`[whatsappClient] !groupid received in group: ${groupId}`);
+
+            await client.sendMessage(
+                groupId,
+                `📋 Group ID: ${groupId}\n\nYou can use this ID in HPRT Reminder settings to send reminders to this group.`
+            );
+        } catch (err) {
+            logger.error('[whatsappClient] Error handling !groupid message:', err.message);
+        }
     });
 }
 

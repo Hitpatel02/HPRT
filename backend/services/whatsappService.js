@@ -262,14 +262,37 @@ async function sendReminderMessage(clientRow, pendingDocs, reminderNumber, dueDa
 async function updateReminderStatus(clientId, documentMonth, reminderNumber, documentType) {
     if (!reminderNumber || reminderNumber < 1) return;
 
-    const prefixMap = { gst: 'gst_1_reminder_', tds: 'tds_reminder_', bank: 'bank_reminder_' };
-    const prefix = prefixMap[documentType] || 'reminder_';
+    // Map document type to column prefix
+    const prefixMap = { gst: 'gst_1_reminder', tds: 'tds_reminder', bank: 'bank_reminder' };
+    const prefix = prefixMap[documentType];
+    if (!prefix) {
+        logger.warn(`[whatsappService] Unknown documentType for reminder status update: ${documentType}`);
+        return;
+    }
+
+    // Static map of all valid column combinations \u2014 eliminates column-name interpolation.
+    // Any key not in this map indicates a programming error and is rejected.
+    const COLUMN_MAP = {
+        'gst_1_reminder_1': { sent: 'gst_1_reminder_1_sent', date: 'gst_1_reminder_1_sent_date' },
+        'gst_1_reminder_2': { sent: 'gst_1_reminder_2_sent', date: 'gst_1_reminder_2_sent_date' },
+        'tds_reminder_1': { sent: 'tds_reminder_1_sent', date: 'tds_reminder_1_sent_date' },
+        'tds_reminder_2': { sent: 'tds_reminder_2_sent', date: 'tds_reminder_2_sent_date' },
+        'bank_reminder_1': { sent: 'bank_reminder_1_sent', date: 'bank_reminder_1_sent_date' },
+        'bank_reminder_2': { sent: 'bank_reminder_2_sent', date: 'bank_reminder_2_sent_date' },
+    };
+
+    const key = `${prefix}_${reminderNumber}`;
+    const cols = COLUMN_MAP[key];
+    if (!cols) {
+        logger.error(`[whatsappService] Invalid reminder column key: ${key} — skipping update`);
+        return;
+    }
 
     try {
         await db.query(
             `UPDATE "user".client_documents
-       SET ${prefix}${reminderNumber}_sent = TRUE,
-           ${prefix}${reminderNumber}_sent_date = $3
+       SET ${cols.sent} = TRUE,
+           ${cols.date} = $3
        WHERE client_id = $1 AND document_month = $2`,
             [clientId, documentMonth, new Date().toISOString()]
         );

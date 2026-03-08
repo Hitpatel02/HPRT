@@ -17,16 +17,35 @@ async function updateReminderStatus(reminderData) {
     reminder_number,
     column_prefix
   } = reminderData;
-  
+
+  // Map every valid prefix+number combination to hardcoded column names.
+  // This prevents column-name injection — no string from outside this map
+  // can ever reach the SQL statement.
+  const COLUMN_MAP = {
+    'gst_1_reminder_1': { sent: 'gst_1_reminder_1_sent', date: 'gst_1_reminder_1_sent_date' },
+    'gst_1_reminder_2': { sent: 'gst_1_reminder_2_sent', date: 'gst_1_reminder_2_sent_date' },
+    'tds_reminder_1': { sent: 'tds_reminder_1_sent', date: 'tds_reminder_1_sent_date' },
+    'tds_reminder_2': { sent: 'tds_reminder_2_sent', date: 'tds_reminder_2_sent_date' },
+    'bank_reminder_1': { sent: 'bank_reminder_1_sent', date: 'bank_reminder_1_sent_date' },
+    'bank_reminder_2': { sent: 'bank_reminder_2_sent', date: 'bank_reminder_2_sent_date' },
+  };
+
+  // column_prefix already ends with '_', e.g. 'gst_1_reminder_' → strip trailing '_'
+  const key = `${column_prefix.replace(/_$/, '')}${reminder_number}`;
+  const cols = COLUMN_MAP[key];
+  if (!cols) {
+    throw new Error(`[clientDocumentsQueries] Invalid reminder column key: ${key}`);
+  }
+
   const result = await db.query(
     `UPDATE "user".client_documents 
-     SET ${column_prefix}${reminder_number}_sent = TRUE, 
-         ${column_prefix}${reminder_number}_sent_date = CURRENT_TIMESTAMP 
+     SET ${cols.sent} = TRUE, 
+         ${cols.date} = CURRENT_TIMESTAMP 
      WHERE client_id = $1 AND document_month = $2
      RETURNING *`,
     [client_id, document_month]
   );
-  
+
   return result.rows[0];
 }
 
@@ -42,7 +61,7 @@ async function getClientDocument(clientId, documentMonth) {
      WHERE client_id = $1 AND document_month = $2`,
     [clientId, documentMonth]
   );
-  
+
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
@@ -59,7 +78,7 @@ async function createClientDocument(documentData) {
     bank_statement_received = false,
     tds_received = false
   } = documentData;
-  
+
   const result = await db.query(
     `INSERT INTO "user".client_documents
        (client_id, document_month, gst_1_received, bank_statement_received, tds_received)
@@ -67,7 +86,7 @@ async function createClientDocument(documentData) {
      RETURNING *`,
     [client_id, document_month, gst_1_received, bank_statement_received, tds_received]
   );
-  
+
   return result.rows[0];
 }
 
@@ -87,7 +106,7 @@ async function updateDocumentReceived(updateData) {
     document_type,
     received
   } = updateData;
-  
+
   // Map document type to column name
   let columnName;
   switch (document_type) {
@@ -105,7 +124,7 @@ async function updateDocumentReceived(updateData) {
     default:
       throw new Error(`Invalid document type: ${document_type}`);
   }
-  
+
   const result = await db.query(
     `UPDATE "user".client_documents
      SET ${columnName} = $1,
@@ -114,7 +133,7 @@ async function updateDocumentReceived(updateData) {
      RETURNING *`,
     [received, client_id, document_month]
   );
-  
+
   return result.rows[0];
 }
 

@@ -15,6 +15,7 @@ import './styles/design-system.css';
 import './css/App.css';
 import Sidebar from './components/Sidebar';
 import Spinner from './components/ui/Spinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // ── Lazy-loaded route components ──────────────────────────────────────────
 const Login            = lazy(() => import('./pages/Login'));
@@ -86,9 +87,11 @@ function App() {
       <div
         className={`app-shell__content ${collapsed ? 'app-shell__content--collapsed' : ''}`}
       >
-        <Suspense fallback={<RouteLoader />}>
-          <AppRoutes />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<RouteLoader />}>
+            <AppRoutes />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       <ToastContainer

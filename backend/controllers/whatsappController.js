@@ -78,7 +78,7 @@ exports.getStatus = async (req, res, next) => {
  */
 exports.sendTest = async (req, res, next) => {
     try {
-        const { groupId } = req.body;
+        const { groupId, message: customMessage } = req.body;
 
         if (!groupId) {
             return res.status(400).json({ success: false, message: 'Group ID is required' });
@@ -88,11 +88,24 @@ exports.sendTest = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid WhatsApp group ID format' });
         }
 
-        const success = await sendTestMessage(groupId);
+        if (!whatsappClient.isReady()) {
+            return res.status(503).json({ success: false, message: 'WhatsApp is not connected' });
+        }
+
+        // Build IST datetime string for default message
+        const istNow = new Date(Date.now() + (5 * 60 + 30) * 60 * 1000)
+            .toISOString().replace('T', ' ').slice(0, 19) + ' IST';
+        const defaultMessage =
+            `✅ Test message from HPRT Reminder System — ${istNow}. ` +
+            `If you received this, your group is configured correctly.`;
+
+        const finalMessage = (customMessage && customMessage.trim()) ? customMessage.trim() : defaultMessage;
+
+        const success = await sendTestMessage(groupId, finalMessage);
         if (success) {
-            res.json({ success: true, message: 'Test message sent successfully' });
+            res.json({ success: true, message: 'Message sent successfully to the group' });
         } else {
-            res.status(500).json({ success: false, message: 'Failed to send test message — is WhatsApp connected?' });
+            res.status(500).json({ success: false, message: 'Failed to send message — check server logs' });
         }
     } catch (error) {
         logger.error('Error sending test message:', error);

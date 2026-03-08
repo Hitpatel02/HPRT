@@ -145,6 +145,15 @@ async function ensureTable() {
   `);
 }
 
+/**
+ * Hard-delete a single reminder job row by its UUID.
+ * Used before rescheduling fresh jobs to clear stale pending/failed entries.
+ * @param {string} id - UUID of the reminder_jobs row
+ */
+async function deleteJobById(id) {
+    await db.query(`DELETE FROM "user".reminder_jobs WHERE id = $1`, [id]);
+}
+
 module.exports = {
     createJob,
     updateJobStatus,
@@ -152,5 +161,6 @@ module.exports = {
     getJobsBySettingsId,
     jobExistsForType,
     cancelJobsBySettingsId,
+    deleteJobById,
     ensureTable,
 };
