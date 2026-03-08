@@ -97,12 +97,12 @@ app.use('/api/agreements', agreementRoutes);
 /* ---------------- API 404 HANDLER (must be before SPA catch-all) ---------------- */
 app.use('/api', notFound);
 
-/* ---------------- FRONTEND (SPA) ---------------- */
-const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
+/* ---------------- FRONTEND (SPA) (only use when developing) ---------------- */
+//const frontendPath = path.join(__dirname, '../frontend/dist');
+//app.use(express.static(frontendPath));
+//app.get('*', (req, res) => {
+//  res.sendFile(path.join(frontendPath, 'index.html'));
+//});
 
 /* ---------------- ERROR HANDLING ---------------- */
 app.use(errorHandler);
