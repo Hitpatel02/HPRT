@@ -91,6 +91,7 @@ app.use('/api/pending-documents', pendingDocumentRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/internal', require('./routes/internalRoutes'));
 app.use('/api/logs', logsRoutes);
 app.use('/api/agreements', agreementRoutes);
 
